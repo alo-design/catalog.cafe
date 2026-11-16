@@ -12,3 +12,6 @@ A coffee setup finder: pick a category, answer a few questions, and the catalog 
 - **Data:** Supabase project `catalog-cafe`. Tables `gear`, `beans`, `meta` are public read; `proposals` and `runs` are owner-only.
 - **Owner sign-in:** catalog.cafe/#owner, by emailed link. Owner emails are listed in the `admin_emails` table.
 - **Research agent:** a daily Claude scheduled task ("Catalog.cafe research") that files proposed catalog changes into `proposals` for review on the site.
+
+## Publishing
+Pushing to `main` publishes the `site/` folder to catalog.cafe through Netlify.
