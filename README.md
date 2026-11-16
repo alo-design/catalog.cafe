@@ -15,3 +15,7 @@ A coffee setup finder: pick a category, answer a few questions, and the catalog 
 
 ## Publishing
 Pushing to `main` publishes the `site/` folder to catalog.cafe through Netlify.
+
+## Design
+The design rules (type, colour, spacing, layout) live in the catalog.cafe design system: https://claude.ai/artifact/Mmh2LT63kWUggRwJxB1RbB
+One family, two weights: Helvetica Neue Light for headings, Regular for everything else. Black, white and grey.
