@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brewfinder</title>
+<meta name="description" content="Build your coffee setup: answer a few questions and see the grinders, espresso machines and beans that fit.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a full-screen stage of floating products. Top matches sit large and labelled in the middle,
+   the rest drift around the edges. A floating question card sits at the bottom (desktop) or a sheet (phone). */
+:root{
+  --bg:#F4F4F2; --card:#FFFFFF; --tile:#F2F2F0; --tile-hover:#EAEAE7; --ink:#1B1B1A; --muted:#6E6D69; --line:#E4E3DF;
+  --shadow:rgba(20,20,18,.10); --shadow-strong:rgba(20,20,18,.18); --accent:#B8792F; --scrim:rgba(20,20,18,.32);
+  --f-ui:"Inter",-apple-system,"Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121211; --card:#1D1D1B; --tile:#262624; --tile-hover:#2F2F2C; --ink:#F1F0EC; --muted:#9E9C95; --line:#33322F;
+  --shadow:rgba(0,0,0,.45); --shadow-strong:rgba(0,0,0,.6); --accent:#E0A45A; --scrim:rgba(0,0,0,.55); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121211; --card:#1D1D1B; --tile:#262624; --tile-hover:#2F2F2C; --ink:#F1F0EC; --muted:#9E9C95; --line:#33322F;
+  --shadow:rgba(0,0,0,.45); --shadow-strong:rgba(0,0,0,.6); --accent:#E0A45A; --scrim:rgba(0,0,0,.55); color-scheme:dark}
+
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.4;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ---------- header ---------- */
+.top{position:fixed;inset:0 0 auto;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+  padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px max(24px,env(safe-area-inset-left,0px));pointer-events:none}
+.top>*{pointer-events:auto}
+.logo{justify-self:start;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:700;letter-spacing:-.03em;font-size:17px}
+.logo svg{width:30px;height:30px}
+.tabs{display:flex;gap:2px;background:var(--line);padding:4px;border-radius:999px}
+.tabs button{border:0;background:transparent;width:56px;height:44px;border-radius:999px;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.right{justify-self:end;display:flex;align-items:center;gap:10px}
+.dark-pill{border:0;background:var(--ink);color:var(--bg);height:48px;padding:0 24px;border-radius:999px;font-weight:600;font-size:15px}
+.circle{border:0;background:var(--card);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;box-shadow:0 1px 4px var(--shadow),0 0 0 1px var(--line) inset}
+.circle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.review{border:0;background:var(--accent);color:#fff;height:36px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:600}
+
+/* ---------- stage ---------- */
+.stage{position:fixed;inset:0;z-index:1}
+.p{position:absolute;border:0;background:none;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;
+  transform:translate(-50%,-50%);transition:left .75s cubic-bezier(.22,.8,.22,1),top .75s cubic-bezier(.22,.8,.22,1),width .75s cubic-bezier(.22,.8,.22,1),opacity .45s ease,filter .45s ease}
+.p .img{display:block;width:100%;aspect-ratio:1;transition:transform .2s ease}
+.p .img>svg,.p .img>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
+.p .txt{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:max(150%,220px);text-align:center;padding-top:10px;opacity:0;transition:opacity .35s ease;pointer-events:none}
+.p .nm{font-weight:500;font-size:clamp(14px,1.15vw,19px);line-height:1.25;text-wrap:balance}
+.p .sub{font-size:clamp(13px,.95vw,16px);color:var(--muted);margin-top:2px}
+.p.feat .txt{opacity:1;transition-delay:.35s}
+@media (hover:hover){.p:hover .img{transform:translateY(-4px)} .p:not(.feat):hover .txt{opacity:1;transition-delay:0s}}
+.p:active .img{transform:scale(.97)}
+.p.gone{opacity:0;filter:blur(14px);pointer-events:none}
+.p.gone .img{transform:scale(.88)}
+.p.enter{opacity:0;filter:blur(10px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .p .img>svg{filter:drop-shadow(0 0 .7px rgba(255,255,255,.4))}}
+:root[data-theme="dark"] .p .img>svg{filter:drop-shadow(0 0 .7px rgba(255,255,255,.4))}
+.empty{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);max-width:min(420px,80vw);font-size:16px}
+
+/* ---------- question card ---------- */
+.card{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:max(28px,calc(env(safe-area-inset-bottom,0px) + 16px));
+  width:min(940px,calc(100vw - 48px));background:var(--card);border-radius:22px;box-shadow:0 12px 48px var(--shadow),0 0 0 1px var(--line) inset;
+  padding:22px clamp(20px,2.4vw,36px) clamp(24px,2.4vw,36px)}
+.card-top{display:flex;align-items:center;justify-content:space-between;min-height:24px;font-size:13px;color:var(--muted)}
+.ghost{border:0;background:none;color:var(--muted);font-size:13px;padding:2px 0}
+.ghost:hover{color:var(--ink)}
+.ghost[disabled]{visibility:hidden}
+.q{font-size:clamp(24px,2.3vw,36px);font-weight:600;letter-spacing:-.025em;text-align:center;margin:4px 0 clamp(18px,2vw,30px);text-wrap:balance}
+.qsub{text-align:center;color:var(--muted);font-size:15px;margin:-14px 0 22px}
+.opts{display:flex;gap:12px}
+.opt{flex:1 1 0;min-width:0;border:0;background:var(--tile);border-radius:14px;padding:clamp(18px,2.4vh,30px) 10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:background .15s,transform .12s}
+.opt b{font-size:clamp(15px,1.15vw,18px);font-weight:600}
+.opt span{font-size:clamp(13px,1vw,16px);color:var(--muted)}
+.opt:active{transform:scale(.98)}
+@media (hover:hover){.opt:hover{background:var(--tile-hover)}}
+.opt[disabled]{opacity:.35;cursor:default}
+.done-acts{display:flex;justify-content:center;gap:10px}
+.soft-pill{border:0;background:var(--tile);height:46px;padding:0 22px;border-radius:999px;font-weight:600}
+.anim-in{animation:qin .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes qin{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- phone toolbar ---------- */
+.bar{display:none}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
+@keyframes fade{from{opacity:0}}
+.modal{background:var(--card);width:100%;max-width:520px;max-height:86vh;overflow-y:auto;border-radius:24px;padding:12px 24px 24px;animation:up .32s cubic-bezier(.2,.8,.2,1)}
+.modal.wide{max-width:980px}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.grab{display:none}
+.mhead{display:flex;justify-content:flex-end;position:sticky;top:0;z-index:1}
+.x{border:0;background:var(--tile);width:36px;height:36px;border-radius:50%;display:grid;place-items:center}
+.x svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round}
+.hero{width:min(64%,280px);aspect-ratio:1;margin:-8px auto 6px}
+.hero>svg,.hero>img{width:100%;height:100%;object-fit:contain;overflow:visible}
+.mt{text-align:center;font-size:24px;font-weight:600;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.ms{text-align:center;color:var(--muted);font-size:14px;margin:4px 0 0}
+.price{text-align:center;font-family:var(--f-mono);font-size:15px;margin:10px 0 16px}
+.note{font-size:15px;margin:0 0 16px}
+dl.specs{margin:0 0 18px;display:grid;grid-template-columns:auto 1fr;border-top:1px solid var(--line)}
+dl.specs dt,dl.specs dd{margin:0;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+dl.specs dt{color:var(--muted);padding-right:16px}
+dl.specs dd{text-align:right}
+.range{margin:-6px 0 18px}
+.range .lab{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-top:6px}
+.range .tr{height:8px;border-radius:4px;background:var(--tile);position:relative}
+.range .tr i{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--accent)}
+.buy{display:flex;flex-direction:column;gap:8px}
+.buy a,.buy button{display:flex;justify-content:space-between;align-items:center;text-decoration:none;border-radius:14px;padding:14px 16px;font-weight:600;border:0}
+.buy .pri{background:var(--ink);color:var(--card)}
+.buy .sec{background:var(--tile);color:var(--ink)}
+.buy small{font-weight:400;opacity:.7}
+.disc{font-size:12px;color:var(--muted);text-align:center;margin:12px 0 0}
+.setlist{display:flex;flex-direction:column}
+.setrow{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);text-align:left;background:none;border-left:0;border-right:0;border-top:0;width:100%}
+.setrow .th{width:56px;height:56px}
+.setrow .th>svg,.setrow .th>img{width:100%;height:100%;object-fit:contain}
+.setrow button.rm{border:0;background:none;color:var(--muted);font-size:13px}
+.setrow .nm2{font-weight:600}
+.setrow .pp{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.tot{display:flex;justify-content:space-between;padding:14px 0 4px;font-weight:600}
+.tot span{font-family:var(--f-mono)}
+.toast{position:fixed;left:50%;bottom:calc(50% - 20px);transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;animation:fade .2s}
+
+/* browse all */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:24px 16px;margin-top:20px}
+.bitem{border:0;background:none;padding:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.bitem .bimg{width:100%;aspect-ratio:1;background:var(--tile);border-radius:16px;padding:14%;display:block}
+.bitem .bimg>svg,.bitem .bimg>img{width:100%;height:100%;object-fit:contain;overflow:visible}
+.bitem .nm{font-weight:500;font-size:14px;line-height:1.25}
+.bitem .pr{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.bitem.dim{opacity:.4}
+.seg{display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:none;border-radius:999px;padding:6px 14px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+/* search */
+.sinput{width:100%;font:inherit;font-size:18px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:10px 2px;outline:none}
+.sres{margin-top:8px}
+.sres .setrow{cursor:pointer}
+.slabel{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+/* menu */
+.mlist{display:flex;flex-direction:column;margin-top:12px}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 2px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;font-size:16px;width:100%}
+.mrow span{color:var(--muted);font-size:14px}
+.mrow select{font:inherit;font-size:14px;color:var(--ink);background:var(--tile);border:0;border-radius:999px;padding:6px 10px}
+/* review */
+.prop{border-bottom:1px solid var(--line);padding:14px 0;display:flex;flex-direction:column;gap:6px}
+.prop .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;position:static;padding:0;pointer-events:auto}
+.prop .kind{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.prop .what{font-weight:600}
+.prop .why{font-size:14px;color:var(--muted)}
+.prop .diff{font-family:var(--f-mono);font-size:12px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.prop .diff s{color:var(--muted)}
+.prop .src{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px}
+.prop .src a{color:var(--muted)}
+.prop .acts{display:flex;gap:8px;margin-top:4px}
+.prop .acts button{border:0;border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px}
+.prop .ok{background:var(--ink);color:var(--card)}
+.prop .no{background:var(--tile)}
+.allbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.pill{border:0;background:var(--tile);border-radius:999px;height:40px;padding:0 16px;font-weight:600}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  .top{grid-template-columns:auto 1fr auto;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+  .logo span{display:none}
+  .tabs{justify-self:center}
+  .tabs button{width:clamp(34px,9.4vw,46px);height:40px}
+  .tabs svg{width:21px;height:21px}
+  .right .dark-pill,.right #searchBtn,.right .review{display:none}
+  .circle{width:44px;height:44px}
+  .card{left:0;right:0;transform:none;bottom:0;width:auto;border-radius:24px 24px 0 0;box-shadow:0 -6px 28px var(--shadow);
+    padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  .q{font-size:24px;margin:2px 0 14px}
+  .qsub{margin:-8px 0 14px}
+  .opts{overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px;scroll-snap-type:x mandatory}
+  .opts::-webkit-scrollbar{display:none}
+  .opt{flex:0 0 calc((100% - 24px)/3.1);scroll-snap-align:start;padding:16px 8px}
+  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border-top:1px solid var(--line);
+    padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .stack{border:0;background:none;width:64px;height:48px;position:relative;padding:0}
+  .stack .t{position:absolute;bottom:0;width:40px;height:40px;border-radius:9px;background:var(--tile);box-shadow:0 1px 3px var(--shadow);padding:3px}
+  .stack .t>svg,.stack .t>img{width:100%;height:100%;object-fit:contain}
+  .stack .none{position:absolute;inset:4px 18px 4px 0;border:1.5px dashed var(--line);border-radius:9px}
+  .bar .soft-pill{height:48px;padding:0 26px}
+  .bar .circle{box-shadow:none;background:var(--tile)}
+  .modal{max-width:none;border-radius:24px 24px 0 0;max-height:92vh;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  .scrim{align-items:flex-end;padding:0}
+  .grab{display:block;width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 6px}
+  .bgrid{grid-template-columns:repeat(2,1fr);gap:20px 12px}
+  .p .txt{width:max(120%,150px)}
+  .p .nm{font-size:15px}
+  .p .sub{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#grinders" aria-label="Brewfinder home"><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="16" rx="9.5" ry="13" transform="rotate(32 16 16)" fill="currentColor"/><path d="M11.6 6.8c4.4 4.6 1.2 12.6 8.8 18.4" fill="none" stroke="var(--bg)" stroke-width="2.2" stroke-linecap="round"/></svg><span>Brewfinder</span></a>
+  <div class="tabs" role="tablist" aria-label="Product type" id="tabs"></div>
+  <div class="right">
+    <button class="review" id="reviewBtn" hidden></button>
+    <button class="dark-pill" id="browseBtn">Browse all</button>
+    <button class="circle" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+    <button class="circle" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+  </div>
+</header>
+
+<main class="stage" id="stage" aria-label="Products"></main>
+
+<section class="card" id="card" aria-live="polite">
+  <div class="card-top"><button class="ghost" id="back">← Back</button><span id="step"></span><button class="ghost" id="reset">Start over</button></div>
+  <div id="qwrap"></div>
+</section>
+
+<nav class="bar" aria-label="Toolbar">
+  <button class="stack" id="stack" aria-label="My setup"></button>
+  <button class="soft-pill" id="browseBtn2">Browse all</button>
+  <button class="circle" id="searchBtn2" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+</nav>
+<div id="layer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="/config.js"></script>
+<script>
+/* ---------- affiliate config: replace with your real tags ---------- */
+const AFFILIATE={amazonTag:'YOURTAG-20'};
+
+/* ---------- catalog: live from the artifact database (prices stored in USD) ---------- */
+let GEAR=[];            // merged view of gear + beans, active items only
+let RAW={gear:[],beans:[]};
+let FX={USD:1};
+let LOAD='loading';     // loading | ready | offline | stale
+let PENDING=[];         // proposals awaiting review (editors only)
+let isEditor=false, SB=null, SESSION=null;
+
+const ICON={
+  grinders:'<path d="M9 10h6v10H9z"/><path d="M8 10h8"/><path d="M12 10V4h6"/><circle cx="18.5" cy="4" r="1.5"/>',
+  espresso:'<rect x="3.5" y="4" width="17" height="12" rx="1.5"/><path d="M9 9h6"/><path d="M10 16v2.5h4V16"/><path d="M3 20.5h18"/>',
+  brewers:'<path d="M4.5 6h15l-5 9h-5z"/><path d="M7 19.5h10"/><path d="M12 15v4.5"/>',
+  kettles:'<path d="M7 20v-7a5 5 0 0 1 10 0v7z"/><path d="M7 15c-3 0-3.5-5-5-7"/><path d="M17 12h1.5a2 2 0 0 1 0 4H17"/><path d="M12 8V6.5"/>',
+  scales:'<path d="M3 14h18l1.5 5h-21z"/><path d="M10 16.5h4"/>',
+  beans:'<ellipse cx="12" cy="12" rx="6.5" ry="9" transform="rotate(30 12 12)"/><path d="M8.5 5.5c3 3 .5 9 6.5 13"/>'
+};
+const CURS={USD:'US dollar',CAD:'Canadian dollar',EUR:'Euro',GBP:'British pound',AUD:'Australian dollar'};
+const cur=()=>FX[S.cur]?S.cur:'USD';
+function money(usd){
+  const c=cur(), v=usd*(FX[c]||1);
+  try{return new Intl.NumberFormat('en-US',{style:'currency',currency:c,maximumFractionDigits:0}).format(v)}catch(e){return '$'+Math.round(v)}
+}
+function nice(usd){const v=usd*(FX[cur()]||1), st=v>=100?10:5;return Math.round(v/st)*st/(FX[cur()]||1)}
+const under=n=>()=>`Under ${money(nice(n))}`, span=(a,b)=>()=>`${money(nice(a))}–${money(nice(b))}`, over=n=>()=>`${money(nice(n))}+`;
+const B=(lo,hi)=>g=>g.price>=lo&&g.price<hi;
+const TABS=[
+ {key:'grinders',cat:'grinder',label:'Grinders',qs:[
+   {id:'for',q:'What are you grinding for?',o:[['espresso','Espresso','Fine, even grounds',g=>g.does.includes('espresso')],['filter','Filter','Pour-over, drip, press',g=>g.does.includes('filter')],['both','Both','One grinder for all',g=>g.does.length===2]]},
+   {id:'power',q:'Hand crank or electric?',o:[['hand','Hand crank','Quiet and portable',g=>g.kind==='hand'],['electric','Electric','Push a button',g=>g.kind!=='hand']]},
+   {id:'budget',q:"What's your budget?",o:[['lo',under(150),'Get started',B(0,150)],['mid',span(150,400),'The sweet spot',B(150,400)],['hi',over(400),'Buy once',B(400,1e9)]]}
+ ]},
+ {key:'espresso',cat:'espresso',label:'Espresso machines',qs:[
+   {id:'style',q:'How do you want to pull shots?',o:[['lever','By hand','Lever, no electronics',g=>g.effort===3],['semi','Semi-automatic','You start and stop it',g=>g.effort===2],['auto','Guided','Built-in grinder or auto milk',g=>g.effort===1]]},
+   {id:'milk',q:'Do you make milk drinks?',o:[['yes','Yes','Lattes, flat whites',g=>g.milk],['no','Rarely','Mostly straight shots',g=>true]]},
+   {id:'budget',q:"What's your budget?",o:[['lo',under(600),'',B(0,600)],['mid',span(600,1500),'',B(600,1500)],['hi',over(1500),'',B(1500,1e9)]]},
+   {id:'space',q:'How much counter space?',o:[['tight','Tight','Under 20 cm wide',g=>g.w===1],['normal','Normal','',g=>g.w<=2],['roomy','Roomy','Anything fits',g=>true]]}
+ ]},
+ {key:'beans',cat:'bean',label:'Beans',qs:[
+   {id:'for',q:'What are you brewing?',o:[['espresso','Espresso','Shots and milk drinks',g=>g.for!=='filter'],['filter','Filter','Pour-over, drip, press',g=>g.for!=='espresso']]},
+   {id:'roast',q:'How dark do you like it?',o:[['light','Light','Bright, fruity, tea-like',g=>g.roast==='light'],['medium','Medium','Sweet and balanced',g=>g.roast==='medium'],['dark','Dark','Bold, roasty, low acid',g=>g.roast==='dark']]},
+   {id:'flavor',q:'Which flavours pull you in?',o:[['fruity','Fruity & floral','Berries, citrus, jasmine',g=>g.flavor==='fruity'],['choc','Chocolate & nutty','Cocoa, caramel, hazelnut',g=>g.flavor==='choc'],['sweet','Sweet & classic','Brown sugar, toffee',g=>g.flavor==='sweet']]},
+   {id:'budget',q:'Price per bag?',o:[['lo',under(18),'',B(0,18)],['mid',span(18,26),'',B(18,26)],['hi',over(26),'',B(26,1e9)]]}
+ ]},
+ {key:'brewers',cat:'brewer',label:'Brewers',qs:[
+   {id:'taste',q:'What kind of cup do you like?',o:[['clean','Clean & bright','Tea-like, layered',g=>g.taste==='clean'],['rich','Rich & full','Heavier body',g=>g.taste==='rich'],['strong','Strong & short','Small, intense',g=>g.taste==='strong'],['auto','Hands-off','A machine does it',g=>g.taste==='auto']]},
+   {id:'cups',q:'How many cups at once?',o:[['1','Just me','1 cup',g=>true],['2','2–4','For a couple',g=>g.cap>=3],['6','A crowd','6 or more',g=>g.cap>=6]]},
+   {id:'budget',q:"What's your budget?",o:[['lo',under(40),'',B(0,40)],['mid',span(40,100),'',B(40,100)],['hi',over(100),'',B(100,1e9)]]}
+ ]},
+ {key:'kettles',cat:'kettle',label:'Kettles',qs:[
+   {id:'heat',q:'How will you heat it?',o:[['electric','Electric','Plugs into a base',g=>g.electric],['stove','Stovetop','Gas, electric or induction',g=>!g.electric]]},
+   {id:'temp',q:'Do you want to set the temperature?',o:[['yes','Yes','Dial in exact degrees',g=>g.temp],['no','No','Boiling is fine',g=>true]]},
+   {id:'budget',q:"What's your budget?",o:[['lo',under(80),'',B(0,80)],['hi',over(80),'',B(80,1e9)]]}
+ ]},
+ {key:'scales',cat:'scale',label:'Scales',qs:[
+   {id:'use',q:'What are you weighing for?',o:[['espresso','Espresso','Fits on a drip tray',g=>g.use!=='pourover'],['pourover','Pour-over','Room for a server',g=>g.use!=='espresso']]},
+   {id:'extras',q:'What should it do?',o:[['basic','Just weigh','0.1 g is enough',g=>true],['timer','Weigh and time','Built-in timer',g=>g.timer],['app','Track the brew','App and flow rate',g=>g.app]]},
+   {id:'budget',q:"What's your budget?",o:[['lo',under(70),'',B(0,70)],['hi',over(70),'',B(70,1e9)]]}
+ ]}
+];
+
+/* ---------- state ---------- */
+let S={tab:'grinders',answers:{},setup:[],cur:'USD'};
+try{const s=JSON.parse(localStorage.getItem('bf2')||'null');if(s)S=Object.assign(S,s)}catch(e){}
+TABS.forEach(t=>{S.answers[t.key]=S.answers[t.key]||{}});
+if(/^#(grinders|espresso|beans|brewers|kettles|scales)$/.test(location.hash))S.tab=location.hash.slice(1);
+const save=()=>{try{localStorage.setItem('bf2',JSON.stringify(S))}catch(e){}};
+const tab=()=>TABS.find(t=>t.key===S.tab);
+const byId=id=>GEAR.find(g=>g.id===id);
+
+function matches(t,answers){
+  return GEAR.filter(g=>g.cat===t.cat&&t.qs.every(q=>{
+    const a=answers[q.id]; if(!a||a==='any')return true;
+    return q.o.find(o=>o[0]===a)[3](g);
+  })).sort((a,b)=>a.pop-b.pop);
+}
+const stepOf=t=>t.qs.findIndex(q=>!S.answers[t.key][q.id]);
+
+/* ---------- product renders (procedural SVG, transparent background) ---------- */
+let uid=0;
+function shade(hex,p){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=p<0?0:255,a=Math.abs(p);r=Math.round((t-r)*a+r);g=Math.round((t-g)*a+g);b=Math.round((t-b)*a+b);return `rgb(${r},${g},${b})`}
+function art(it){
+  const u='g'+(uid++), c=it.col||'#8A8D90', a=it.acc||'#333333';
+  const isGlass=c==='glass'||c==='tan';
+  const base=c==='chrome'?'#C9CCCF':isGlass?'#BFC9CE':c;
+  const defs=`<defs>
+   <linearGradient id="${u}b" x1="0" x2="1"><stop offset="0" stop-color="${shade(base,.28)}"/><stop offset=".42" stop-color="${base}"/><stop offset="1" stop-color="${shade(base,-.38)}"/></linearGradient>
+   <linearGradient id="${u}m" x1="0" x2="1"><stop offset="0" stop-color="#E8E9EA"/><stop offset=".45" stop-color="#B4B7BA"/><stop offset="1" stop-color="#6E7276"/></linearGradient>
+   <linearGradient id="${u}d" x1="0" x2="1"><stop offset="0" stop-color="#4A4A4A"/><stop offset="1" stop-color="#141414"/></linearGradient>
+   <linearGradient id="${u}a" x1="0" x2="1"><stop offset="0" stop-color="${shade(a,.25)}"/><stop offset="1" stop-color="${shade(a,-.3)}"/></linearGradient>
+   <linearGradient id="${u}g" x1="0" x2="1"><stop offset="0" stop-color="${c==='tan'?'rgba(210,175,120,.55)':'rgba(220,232,238,.55)'}"/><stop offset=".5" stop-color="${c==='tan'?'rgba(190,150,95,.35)':'rgba(190,205,212,.28)'}"/><stop offset="1" stop-color="${c==='tan'?'rgba(150,110,60,.6)':'rgba(140,160,170,.5)'}"/></linearGradient>
+  </defs>`;
+  const body=`url(#${u}b)`, metal=`url(#${u}m)`, dark=`url(#${u}d)`, acc=`url(#${u}a)`, glass=`url(#${u}g)`;
+  const gStroke='stroke="rgba(110,130,140,.55)" stroke-width="1.2"';
+  let s='';
+  if(it.cat==='grinder'){
+    if(it.kind==='hand'){
+      s=`<rect x="98" y="34" width="4" height="30" fill="${metal}"/>
+      <rect x="96" y="30" width="60" height="7" rx="3.5" fill="${metal}"/>
+      <ellipse cx="156" cy="24" rx="9" ry="11" fill="${acc}"/>
+      <rect x="77" y="60" width="46" height="12" rx="4" fill="${shade(base,-.2)}"/>
+      <rect x="78" y="70" width="44" height="116" rx="7" fill="${body}"/>
+      <rect x="76" y="126" width="48" height="7" rx="2" fill="${shade(base,-.32)}"/>
+      <rect x="82" y="74" width="5" height="108" rx="2.5" fill="#fff" opacity=".18"/>`;
+    }else{
+      const top=it.kind==='hopper'
+        ?`<path d="M70 82 L60 22 L140 22 L130 82 Z" fill="rgba(210,220,226,.42)" stroke="rgba(110,130,140,.5)" stroke-width="1.2"/><path d="M66 58 L134 58 L130 82 L70 82 Z" fill="#5B3A22" opacity=".85"/><rect x="58" y="16" width="84" height="8" rx="3" fill="${shade(base,-.15)}"/>`
+        :`<rect x="78" y="52" width="44" height="30" rx="5" fill="${acc}"/><rect x="74" y="46" width="52" height="9" rx="4" fill="${shade(it.acc,-.25)}"/>`;
+      s=`${top}
+      <rect x="56" y="80" width="88" height="106" rx="12" fill="${body}"/>
+      <rect x="76" y="126" width="48" height="56" rx="6" fill="#000" opacity=".55"/>
+      <rect x="85" y="150" width="30" height="30" rx="4" fill="${metal}"/>
+      <circle cx="100" cy="103" r="10" fill="${acc}"/><circle cx="100" cy="103" r="4" fill="${shade(base,-.4)}"/>
+      <rect x="62" y="86" width="6" height="94" rx="3" fill="#fff" opacity=".14"/>`;
+    }
+  }else if(it.cat==='espresso'){
+    if(it.kind==='robot'){
+      s=`<ellipse cx="100" cy="181" rx="56" ry="8" fill="${body}"/>
+      <path d="M100 168 L52 42" stroke="${body}" stroke-width="10" stroke-linecap="round"/>
+      <path d="M100 168 L148 42" stroke="${body}" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="52" cy="40" r="9" fill="${acc}"/><circle cx="148" cy="40" r="9" fill="${acc}"/>
+      <rect x="80" y="86" width="40" height="34" rx="6" fill="${metal}"/>
+      <rect x="92" y="60" width="16" height="28" rx="3" fill="${metal}"/>
+      <rect x="118" y="114" width="40" height="7" rx="3.5" fill="${dark}"/>
+      <rect x="88" y="142" width="24" height="26" rx="3" fill="#F4F2EE" stroke="#cfcac2"/>`;
+    }else if(it.kind==='flair'){
+      s=`<rect x="44" y="174" width="112" height="12" rx="4" fill="${body}"/>
+      <rect x="128" y="38" width="14" height="140" rx="4" fill="${body}"/>
+      <path d="M136 44 L36 68" stroke="${metal}" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="36" cy="68" r="7" fill="${dark}"/>
+      <rect x="78" y="78" width="44" height="46" rx="6" fill="${metal}"/>
+      <rect x="84" y="124" width="32" height="8" rx="2" fill="${metal}"/>
+      <rect x="114" y="124" width="34" height="7" rx="3.5" fill="${dark}"/>
+      <rect x="88" y="146" width="24" height="26" rx="3" fill="#F4F2EE" stroke="#cfcac2"/>`;
+    }else{
+      const W=[0,92,120,140][it.w||2], x=100-W/2;
+      s=`${it.builtIn?`<path d="M${x+8} 52 L${x+2} 14 L${x+46} 14 L${x+40} 52 Z" fill="rgba(210,220,226,.42)" stroke="rgba(110,130,140,.5)" stroke-width="1.2"/><path d="M${x+5} 34 L${x+43} 34 L${x+40} 52 L${x+8} 52Z" fill="#5B3A22" opacity=".85"/>`:''}
+      <rect x="${x}" y="52" width="${W}" height="122" rx="9" fill="${body}"/>
+      <rect x="${x+4}" y="48" width="${W-8}" height="7" rx="2" fill="${metal}"/>
+      <rect x="${x+6}" y="56" width="5" height="112" rx="2.5" fill="#fff" opacity=".16"/>
+      ${it.w>1?`<circle cx="${x+22}" cy="80" r="9" fill="#F6F5F2" stroke="${shade(base,-.4)}" stroke-width="2"/><path d="M${x+22} 80 l4 -4" stroke="#B33" stroke-width="1.5"/>`:''}
+      <rect x="86" y="100" width="28" height="14" rx="3" fill="${metal}"/>
+      <rect x="84" y="114" width="32" height="8" rx="2" fill="${metal}"/>
+      <rect x="114" y="114" width="40" height="7" rx="3.5" fill="${acc}"/>
+      ${it.milk?`<path d="M${x+6} 90 L${x-4} 92 L${x-6} 156" fill="none" stroke="${metal}" stroke-width="3.5" stroke-linecap="round"/>`:''}
+      <rect x="${x+8}" y="172" width="${W-16}" height="14" rx="3" fill="${shade(base,-.35)}"/>
+      <rect x="90" y="144" width="20" height="26" rx="3" fill="#F4F2EE" stroke="#cfcac2"/>`;
+    }
+  }else if(it.cat==='brewer'){
+    const fill=isGlass?glass:body;
+    const k=it.kind;
+    if(k==='cone'){
+      s=`<rect x="74" y="122" width="52" height="64" rx="10" fill="${glass}" ${gStroke}/>
+      <path d="M78 160 h44 v18 a8 8 0 0 1 -8 8 h-28 a8 8 0 0 1 -8 -8z" fill="#4B2C17" opacity=".75"/>
+      <ellipse cx="100" cy="120" rx="34" ry="5" fill="${isGlass?'rgba(160,175,182,.7)':shade(base,-.2)}"/>
+      <path d="M58 52 L142 52 L114 116 L86 116 Z" fill="${fill}" ${isGlass?gStroke:''}/>
+      <rect x="54" y="46" width="92" height="8" rx="3" fill="${isGlass?'rgba(160,175,182,.8)':shade(base,-.1)}"/>
+      ${it.col==='glass'?`<path d="M142 58 q16 2 14 18 q-2 12 -18 10" fill="none" stroke="${it.acc}" stroke-width="5" opacity=".75"/>`:''}
+      ${it.ribs?[66,78,90,102,114,126].map(xx=>`<path d="M${xx} 54 L${100+(xx-100)*.33} 114" stroke="${shade(base,-.18)}" stroke-width="2"/>`).join(''):''}`;
+    }else if(k==='chemex'){
+      s=`<path d="M58 22 L142 22 L108 98 L144 176 Q100 194 56 176 L92 98 Z" fill="${glass}" ${gStroke}/>
+      <path d="M68 160 Q100 150 132 160 L140 176 Q100 192 60 176 Z" fill="#4B2C17" opacity=".7"/>
+      <path d="M88 86 L112 86 L118 114 L82 114 Z" fill="${acc}"/>
+      <circle cx="122" cy="104" r="4" fill="${shade(it.acc,-.3)}"/><path d="M118 100 L128 120" stroke="${shade(it.acc,-.3)}" stroke-width="1.5"/>`;
+    }else if(k==='steep'){
+      s=`<ellipse cx="100" cy="182" rx="38" ry="7" fill="${acc}"/>
+      <rect x="90" y="132" width="20" height="48" rx="4" fill="${acc}"/>
+      <path d="M56 42 L144 42 L118 136 L82 136 Z" fill="${fill}" ${gStroke}/>
+      <path d="M64 70 L136 70 L118 136 L82 136 Z" fill="#4B2C17" opacity=".7"/>
+      <rect x="52" y="36" width="96" height="8" rx="3" fill="${acc}"/>`;
+    }else if(k==='aeropress'){
+      s=`<rect x="70" y="20" width="60" height="8" rx="3" fill="${acc}"/>
+      <rect x="78" y="26" width="44" height="80" rx="3" fill="${acc}" opacity=".85"/>
+      <rect x="72" y="76" width="56" height="94" rx="4" fill="${glass}" ${gStroke}/>
+      <rect x="74" y="122" width="52" height="46" rx="2" fill="#4B2C17" opacity=".7"/>
+      <rect x="64" y="166" width="72" height="10" rx="3" fill="${acc}"/>
+      <rect x="82" y="176" width="36" height="10" rx="2" fill="${acc}" opacity=".7"/>`;
+    }else if(k==='press'){
+      s=`<path d="M100 10 v40" stroke="${metal}" stroke-width="4"/><circle cx="100" cy="10" r="8" fill="${dark}"/>
+      <rect x="62" y="46" width="76" height="10" rx="3" fill="${metal}"/>
+      <rect x="66" y="56" width="68" height="120" rx="3" fill="${glass}" ${gStroke}/>
+      <rect x="68" y="104" width="64" height="70" rx="2" fill="#3E220F" opacity=".85"/>
+      <rect x="62" y="56" width="6" height="128" fill="${metal}"/><rect x="132" y="56" width="6" height="128" fill="${metal}"/>
+      <rect x="60" y="172" width="80" height="14" rx="3" fill="${metal}"/>
+      <path d="M138 70 q30 0 30 36 q0 34 -30 44" fill="none" stroke="${dark}" stroke-width="10" stroke-linecap="round"/>`;
+    }else if(k==='moka'){
+      s=`<path d="M70 118 L130 118 L124 186 L76 186 Z" fill="${body}"/>
+      <rect x="68" y="112" width="64" height="9" rx="2" fill="${shade(base,-.3)}"/>
+      <path d="M72 112 L128 112 L136 48 L64 48 Z" fill="${body}"/>
+      <path d="M64 48 L52 40 L66 56 Z" fill="${shade(base,-.1)}"/>
+      <rect x="62" y="40" width="76" height="9" rx="3" fill="${shade(base,-.15)}"/>
+      <ellipse cx="100" cy="34" rx="7" ry="6" fill="${dark}"/>
+      <path d="M134 58 L164 60 L158 108" fill="none" stroke="${dark}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="76" y="56" width="5" height="52" rx="2.5" fill="#fff" opacity=".25"/>`;
+    }else{
+      s=`<rect x="118" y="16" width="40" height="170" rx="8" fill="${body}"/>
+      <rect x="46" y="16" width="112" height="26" rx="8" fill="${body}"/>
+      <path d="M58 44 L112 44 L104 82 L66 82 Z" fill="${shade(base,-.25)}"/>
+      <rect x="54" y="98" width="62" height="78" rx="12" fill="${glass}" ${gStroke}/>
+      <rect x="57" y="134" width="56" height="40" rx="9" fill="#3E220F" opacity=".8"/>
+      <rect x="50" y="94" width="70" height="8" rx="3" fill="${dark}"/>
+      <path d="M54 112 q-16 0 -16 22 q0 20 16 22" fill="none" stroke="${dark}" stroke-width="7"/>
+      <rect x="46" y="176" width="112" height="10" rx="3" fill="${shade(base,-.3)}"/>
+      <circle cx="138" cy="150" r="4" fill="${it.acc==='#222222'?'#E05A3A':'#7FD3A0'}"/>`;
+    }
+  }else if(it.cat==='kettle'){
+    s=`<path d="M64 150 C36 150 34 104 18 76" fill="none" stroke="${body}" stroke-width="7" stroke-linecap="round"/>
+    <path d="M60 182 L58 122 Q60 90 100 88 Q140 90 142 122 L140 182 Z" fill="${body}"/>
+    <ellipse cx="100" cy="92" rx="32" ry="6" fill="${shade(base,-.2)}"/>
+    <path d="M94 86 h12 v-8 a6 6 0 0 0 -12 0z" fill="${acc}"/>
+    <path d="M140 106 L166 98 L162 170 L140 166" fill="none" stroke="${acc}" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="66" y="98" width="6" height="78" rx="3" fill="#fff" opacity=".18"/>
+    ${it.electric?`<rect x="48" y="178" width="104" height="10" rx="4" fill="${dark}"/><circle cx="138" cy="183" r="2" fill="#E05A3A"/>`:''}
+    ${it.id==='staggstove'?`<rect x="98" y="66" width="4" height="14" fill="${metal}"/><circle cx="100" cy="64" r="5" fill="#F6F5F2" stroke="#999"/>`:''}`;
+  }else if(it.cat==='bean'){
+    const lab=it.acc||'#F4F1EA';
+    s=`<path d="M58 40 L142 40 L150 176 Q100 186 50 176 Z" fill="${body}"/>
+    <path d="M56 30 L144 30 L142 44 L58 44 Z" fill="${shade(base,-.25)}"/>
+    <path d="M60 36 L140 36" stroke="#fff" stroke-opacity=".25" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <rect x="70" y="86" width="60" height="62" rx="4" fill="${lab}"/>
+    <path d="M78 100 h44 M78 110 h30" stroke="${shade(base,-.1)}" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="100" cy="130" rx="9" ry="12" fill="${{light:'#B07A44',medium:'#7A4A26',dark:'#3A2216'}[it.roast]||'#6B4226'}" transform="rotate(25 100 130)"/>
+    <circle cx="100" cy="66" r="7" fill="${shade(base,-.3)}"/><circle cx="100" cy="66" r="3" fill="${shade(base,.2)}"/>
+    <rect x="62" y="48" width="5" height="120" rx="2.5" fill="#fff" opacity=".14"/>`;
+  }else{
+    const W=Math.min(168,60+(it.w||10)*6), x=100-W/2;
+    s=`<path d="M${x+10} 136 L${x+W-10} 136 L${x+W} 160 L${x} 160 Z" fill="${shade(base,.12)}"/>
+    <rect x="${x}" y="160" width="${W}" height="20" rx="3" fill="${shade(base,-.3)}"/>
+    <rect x="${100-18}" y="164" width="36" height="12" rx="2" fill="#0B0B0B"/>
+    <text x="100" y="173.5" text-anchor="middle" font-family="Geist Mono,monospace" font-size="8.5" fill="${a}">18.0g</text>
+    <path d="M${x+18} 140 L${x+W-18} 140" stroke="#fff" stroke-opacity=".15" stroke-width="2"/>`;
+  }
+  // scale renders within the category by real height so a moka pot looks smaller than a batch brewer
+  const pool=GEAR.filter(g=>g.cat===it.cat), maxH=Math.max(...pool.map(g=>g.h||20));
+  const k=it.cat==='scale'?1:0.62+0.38*((it.h||maxH)/maxH);
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="${esc(it.name)}">${defs}
+    <ellipse cx="100" cy="190" rx="${it.cat==='scale'?70:58*k}" ry="5" fill="var(--shadow)"/>
+    <g transform="translate(100 190) scale(${k.toFixed(3)}) translate(-100 -190)">${s}</g></svg>`;
+}
+function sub(it){
+  switch(it.cat){
+    case 'grinder':return `${it.kind==='hand'?'Hand':'Electric'} · ${it.burr||''}`;
+    case 'espresso':return (it.heat||'').split(',')[0];
+    case 'brewer':return it.method;
+    case 'kettle':return it.electric?'Electric':'Stovetop';
+    case 'scale':return (it.spec||'').split(',').slice(0,2).join(',');
+    case 'bean':return `${it.origin||''} · ${it.roast||''} roast`;
+  }
+}
+
+
+/* ---------- images: real photo when the catalog has one, drawing otherwise ---------- */
+function pic(it){
+  const src=typeof it.img==='string'&&/^(\/|https:\/\/|blob:|data:image\/)/.test(it.img)?it.img:null;
+  return src?`<img src="${esc(src)}" alt="" loading="lazy" draggable="false">`:art(it);
+}
+const byPop=(a,b)=>(a.pop||99)-(b.pop||99);
+
+/* ---------- tabs ---------- */
+const tabsEl=document.getElementById('tabs');
+tabsEl.innerHTML=TABS.map(t=>`<button role="tab" id="tab-${t.key}" aria-label="${t.label}" title="${t.label}"><svg viewBox="0 0 24 24">${ICON[t.key]}</svg></button>`).join('');
+tabsEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.id.slice(4);if(k!==S.tab)location.hash=k});
+window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(k==='owner'){openSignIn();return}if(TABS.some(t=>t.key===k)&&k!==S.tab){S.tab=k;save();closeModal();renderAll(true)}});
+
+/* ---------- stage: floating products ---------- */
+const stage=document.getElementById('stage'), cardEl=document.getElementById('card');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const phoneMQ=matchMedia('(max-width:760px)');
+let nodes=new Map(), shownTab=null;
+
+// Slot positions, as % of the stage box. The first three are the large, labelled matches.
+const DESK={feat:[[50,29],[33.5,49],[67,49]],
+  small:[[33,8],[67,8],[6,15],[94,15],[17,35],[83,35],[5,54],[95,54],[20,69],[80,69],[7,87],[93,87]]};
+const PHONE={feat:[[50,21],[26,64],[74,64]], small:[[8,9],[92,9],[7,43],[93,43]]};
+
+function geom(){
+  const W=innerWidth,H=innerHeight;
+  if(!phoneMQ.matches) return {x:0,y:0,w:W,h:H,set:DESK,fs:Math.min(W*.127,H*.24),ss:Math.min(W*.063,H*.12)};
+  const top=document.querySelector('.top').getBoundingClientRect().bottom;
+  const bottom=cardEl.getBoundingClientRect().top-8;
+  const h=Math.max(bottom-top,200);
+  return {x:0,y:top,w:W,h,set:PHONE,fs:Math.min(W*.31,h*.27),ss:Math.min(W*.15,h*.13)};
+}
+function makeEl(it){
+  const b=document.createElement('button');
+  b.className='p';b.dataset.id=it.id;b.setAttribute('aria-label',`${it.name}, about ${money(it.price||0)}`);
+  b.innerHTML=`<span class="img">${pic(it)}</span><span class="txt"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub(it))}</div></span>`;
+  b.addEventListener('click',()=>openProduct(it.id));
+  return b;
+}
+function place(n,g,pt,size){
+  n.style.left=(g.x+g.w*pt[0]/100)+'px';
+  n.style.top=(g.y+g.h*pt[1]/100)+'px';
+  n.style.width=size+'px';
+}
+function layout(fresh){
+  const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), list=matches(t,S.answers[t.key]);
+  const g=geom(), slots=[...g.set.feat.map(p=>({p,s:g.fs,feat:true})),...g.set.small.map(p=>({p,s:g.ss,feat:false}))];
+  const rebuild=fresh||shownTab!==t.key;
+  if(rebuild){stage.innerHTML='';nodes=new Map();shownTab=t.key}
+  // keep nodes in step with the catalog
+  const ids=new Set(all.map(x=>x.id));
+  nodes.forEach((n,id)=>{if(!ids.has(id)){n.remove();nodes.delete(id)}});
+  const created=[];
+  all.forEach((it,i)=>{
+    let n=nodes.get(it.id);
+    if(!n){n=makeEl(it);n.style.transition='none';const sl=slots[i]||slots[slots.length-1];place(n,g,sl.p,sl.s);
+      if(!reduce)n.classList.add('enter');stage.appendChild(n);nodes.set(it.id,n);created.push(n)}
+    else{ // refresh content in case the record changed (price, photo)
+      n.querySelector('.img').innerHTML=pic(it);n.querySelector('.nm').textContent=it.name;n.querySelector('.sub').textContent=sub(it)}
+  });
+  const keep=new Set(list.map(x=>x.id));
+  list.forEach((it,i)=>{
+    const n=nodes.get(it.id), sl=slots[i];
+    if(!sl){n.classList.add('gone');n.classList.remove('feat');n.tabIndex=-1;return}
+    place(n,g,sl.p,sl.s);
+    n.classList.toggle('feat',sl.feat);n.classList.remove('gone');n.tabIndex=0;n.style.zIndex=sl.feat?2:1;
+  });
+  nodes.forEach((n,id)=>{if(!keep.has(id)){n.classList.add('gone');n.classList.remove('feat');n.tabIndex=-1}});
+  if(created.length){
+    void stage.offsetWidth;
+    created.forEach((n,i)=>{n.style.transition='';if(!reduce)setTimeout(()=>n.classList.remove('enter'),40+i*45)});
+  }
+  stage.querySelectorAll('.empty').forEach(e=>e.remove());
+  if(!list.length){
+    const msg=LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.'
+      :LOAD==='loading'?'Loading the catalog…'
+      :!all.length?(t.cat==='bean'?'No beans in the catalog yet. Approve the research agent’s first picks in the review queue.':'Nothing in this category yet.')
+      :'Nothing matches every answer. Go back a step or choose “No preference”.';
+    stage.insertAdjacentHTML('beforeend',`<div class="empty">${msg}</div>`);
+  }
+}
+const renderField=layout;
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>layout(false),120)});
+phoneMQ.addEventListener('change',()=>{renderSheet();layout(false)});
+
+/* ---------- question card ---------- */
+const qwrap=document.getElementById('qwrap');
+function label(o){return typeof o[1]==='function'?o[1]():o[1]}
+function renderSheet(){
+  const t=tab(), ans=S.answers[t.key], step=stepOf(t), n=matches(t,ans).length, any=Object.keys(ans).length>0;
+  document.getElementById('back').disabled=!any;
+  document.getElementById('reset').disabled=!any;
+  document.getElementById('step').textContent=LOAD==='ready'||LOAD==='stale'?`${n} ${n===1?'match':'matches'}`:'';
+  if(step<0){
+    qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${n?'Here’s your shortlist':'No exact match'}</h2>
+      <p class="qsub">${n?'Tap a product for specs and where to buy it.':'Go back a step, or start over.'}</p>
+      <div class="done-acts">${n?`<button class="soft-pill" data-act="browse">See all ${n}</button>`:''}<button class="soft-pill" data-act="reset">Start over</button></div></div>`;
+    return;
+  }
+  const q=t.qs[step];
+  qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${q.q}</h2><div class="opts">${q.o.map(o=>{
+      const c=matches(t,{...ans,[q.id]:o[0]}).length;
+      return `<button class="opt" data-q="${q.id}" data-v="${o[0]}" ${c?'':'disabled'}><b>${label(o)}</b>${o[2]?`<span>${o[2]}</span>`:''}</button>`}).join('')}
+    <button class="opt" data-q="${q.id}" data-v="any"><b>No preference</b></button></div></div>`;
+}
+qwrap.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');
+  if(a){a.dataset.act==='browse'?openBrowse(true):resetTab();return}
+  const b=e.target.closest('.opt');if(!b||b.disabled)return;
+  S.answers[S.tab][b.dataset.q]=b.dataset.v;save();layout(false);renderSheet();
+});
+function resetTab(){S.answers[S.tab]={};save();layout(false);renderSheet()}
+document.getElementById('reset').onclick=resetTab;
+document.getElementById('back').onclick=()=>{const t=tab(),ans=S.answers[t.key];const last=[...t.qs].reverse().find(q=>ans[q.id]);if(!last)return;delete ans[last.id];save();layout(false);renderSheet()};
+
+/* ---------- browse all, search, menu ---------- */
+function openBrowse(onlyMatches){
+  const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), m=new Set(matches(t,S.answers[t.key]).map(x=>x.id));
+  const anyAns=Object.keys(S.answers[t.key]).length>0;
+  const showAll=!onlyMatches||!anyAns;
+  const items=showAll?all:all.filter(x=>m.has(x.id));
+  openModal(`<h2 class="mt">${t.label}</h2>
+    ${anyAns?`<div class="seg"><button data-seg="m" aria-pressed="${!showAll}">Your matches (${m.size})</button><button data-seg="a" aria-pressed="${showAll}">All (${all.length})</button></div>`:`<p class="ms">${all.length} products</p>`}
+    <div class="bgrid">${items.map(it=>`<button class="bitem ${showAll&&anyAns&&!m.has(it.id)?'dim':''}" data-open="${esc(it.id)}"><span class="bimg">${pic(it)}</span><span class="nm">${esc(it.name)}</span><span class="pr">${money(it.price||0)}</span></button>`).join('')||'<p class="ms">Nothing here yet.</p>'}</div>`,'wide');
+  layer.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>openBrowse(b.dataset.seg==='m'));
+  layer.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProduct(b.dataset.open));
+}
+function openSearch(){
+  openModal(`<input class="sinput" id="sq" type="search" placeholder="Search grinders, machines, beans…" aria-label="Search products" autocomplete="off"><div class="sres" id="sres"></div>`);
+  const inp=document.getElementById('sq'), out=document.getElementById('sres');
+  const run=()=>{
+    const q=inp.value.trim().toLowerCase();
+    if(!q){out.innerHTML=`<p class="ms" style="text-align:left;margin-top:14px">${GEAR.length} products across ${TABS.length} categories.</p>`;return}
+    const hits=GEAR.filter(it=>[it.name,it.brand,it.roaster,it.origin,sub(it)].join(' ').toLowerCase().includes(q)).sort(byPop).slice(0,30);
+    out.innerHTML=hits.length?hits.map(it=>`<div class="setrow" role="button" tabindex="0" data-open="${esc(it.id)}"><div class="th">${pic(it)}</div><div style="min-width:0"><div class="nm2">${esc(it.name)}</div><div class="pp">${esc(TABS.find(x=>x.cat===it.cat).label)} · ${money(it.price||0)}</div></div><span></span></div>`).join('')
+      :`<p class="ms" style="text-align:left;margin-top:14px">No products match “${esc(inp.value)}”.</p>`;
+    out.querySelectorAll('[data-open]').forEach(r=>{r.onclick=()=>openProduct(r.dataset.open);r.onkeydown=e=>{if(e.key==='Enter')openProduct(r.dataset.open)}});
+  };
+  inp.addEventListener('input',run);run();setTimeout(()=>inp.focus(),50);
+}
+function openMenu(){
+  const curs=Object.keys(CURS).filter(c=>FX[c]);
+  openModal(`<h2 class="mt">Menu</h2><div class="mlist">
+    <button class="mrow" id="mSetup">My setup <span>${S.setup.length} item${S.setup.length===1?'':'s'}</span></button>
+    <button class="mrow" id="mBrowse">Browse all ${tab().label.toLowerCase()} <span>${GEAR.filter(x=>x.cat===tab().cat).length}</span></button>
+    ${isEditor?`<button class="mrow" id="mReview">Review queue <span>${PENDING.length} waiting</span></button>`:''}
+    <label class="mrow" for="mCur">Currency <select id="mCur">${curs.map(c=>`<option value="${c}" ${c===cur()?'selected':''}>${c} · ${CURS[c]}</option>`).join('')}</select></label>
+    <button class="mrow" id="mReset">Start over <span>${tab().label}</span></button>
+    <button class="mrow" id="mAbout">About and affiliate disclosure</button>
+    ${SESSION?`<button class="mrow" id="mOut">Sign out <span>${esc(SESSION.user.email||'')}</span></button>`:`<button class="mrow" id="mIn">Owner sign in</button>`}</div>`);
+  document.getElementById('mAbout').onclick=openAbout;
+  const mi=document.getElementById('mIn');if(mi)mi.onclick=openSignIn;
+  const mo=document.getElementById('mOut');if(mo)mo.onclick=async()=>{await SB.auth.signOut();closeModal();toast('Signed out')};
+  document.getElementById('mSetup').onclick=openSetup;
+  document.getElementById('mBrowse').onclick=()=>openBrowse(false);
+  const r=document.getElementById('mReview');if(r)r.onclick=openReview;
+  document.getElementById('mCur').onchange=e=>{S.cur=e.target.value;save();renderSheet();layout(false);toast(`Prices in ${S.cur}`)};
+  document.getElementById('mReset').onclick=()=>{resetTab();closeModal()};
+}
+document.getElementById('browseBtn').onclick=()=>openBrowse(true);
+document.getElementById('browseBtn2').onclick=()=>openBrowse(true);
+document.getElementById('searchBtn').onclick=openSearch;
+document.getElementById('searchBtn2').onclick=openSearch;
+document.getElementById('menuBtn').onclick=openMenu;
+/* ---------- my setup ---------- */
+function renderSetup(){
+  const items=S.setup.map(byId).filter(Boolean);
+  const st=document.getElementById('stack');
+  st.innerHTML=items.length?items.slice(-3).map((it,i)=>`<span class="t" style="left:${i*12}px;transform:rotate(${(i-1)*6}deg)">${pic(it)}</span>`).join(''):'<span class="none"></span>';
+}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1600)}
+
+/* ---------- modals ---------- */
+const layer=document.getElementById('layer');
+let lastFocus=null;
+function openModal(html,cls){
+  lastFocus=document.activeElement;
+  layer.innerHTML=`<div class="scrim" id="scrim"><div class="modal ${cls||''}" role="dialog" aria-modal="true"><div class="grab"></div><div class="mhead"><button class="x" id="mx" aria-label="Close"><svg viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>${html}</div></div>`;
+  document.getElementById('mx').focus();
+  document.getElementById('scrim').addEventListener('click',e=>{if(e.target.id==='scrim')closeModal()});
+  document.getElementById('mx').onclick=closeModal;
+}
+function closeModal(){layer.innerHTML='';lastFocus&&lastFocus.focus&&lastFocus.focus()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layer.innerHTML)closeModal()});
+function specs(it){
+  const r=({bean:()=>[['Roaster',it.roaster||'—'],['Origin',it.origin||'—'],['Process',it.process||'—'],['Roast',it.roast||'—'],['Tasting notes',(it.notes||[]).join(', ')||'—'],['Bag',it.size_g?`${it.size_g} g · ${money(it.price/it.size_g*100)} per 100 g`:'—']],
+    grinder:()=>[['Type',it.kind==='hand'?'Hand grinder':it.kind==='hopper'?'Electric, hopper':'Electric, single dose'],['Burrs',it.burr],['Grinds for',(it.does||[]).join(' and ')]],
+    espresso:()=>[['Heating',it.heat],['Steam wand',it.milk?(it.auto?'Yes, automatic':'Yes'):'No'],['Grinder',it.builtIn?'Built in':'Buy separately'],['Footprint',['','Compact','Medium','Large'][it.w]]],
+    brewer:()=>[['Method',it.method],['Makes',`Up to ${it.cap} cup${it.cap>1?'s':''}`],['You also need',it.needs]],
+    kettle:()=>[['Heat',it.electric?'Electric base':'Stovetop'],['Temperature control',it.temp?'Yes':'No'],['Spout','Gooseneck']],
+    scale:()=>[['Features',it.spec],['Best for',{both:'Espresso and pour-over',espresso:'Espresso',pourover:'Pour-over'}[it.use]]]})[it.cat]();
+  return `<dl class="specs">${r.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+}
+function safeUrl(u){try{const x=new URL(u);return x.protocol==='https:'?x.href:null}catch(e){return null}}
+function esc(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function buyLinks(it,q){
+  const own=(it.links||[]).map(l=>({label:l.label,url:safeUrl(l.url)})).filter(l=>l.url&&l.label).slice(0,3);
+  if(own.length)return own.map((l,i)=>`<a class="${i?'sec':'pri'}" href="${esc(l.url)}" target="_blank" rel="noopener sponsored">${esc(l.label)} <small>↗</small></a>`).join('');
+  return `<a class="pri" href="https://www.amazon.com/s?k=${q}&tag=${AFFILIATE.amazonTag}" target="_blank" rel="noopener sponsored">Buy on Amazon <small>↗</small></a>
+      <a class="sec" href="https://www.google.com/search?tbm=shop&q=${q}" target="_blank" rel="noopener">Compare other shops <small>↗</small></a>`;
+}
+function openProduct(id){
+  const it=byId(id), q=encodeURIComponent(it.name), inSetup=S.setup.includes(id);
+  const rng=it.cat==='grinder'?(()=>{const d=it.does||[];const e=d.includes('espresso'),f=d.includes('filter');const [a,b]=e&&f?[4,96]:e?[4,44]:[30,96];
+    return `<div class="range"><div class="tr" role="img" aria-label="Grind range"><i style="left:${a}%;width:${b-a}%"></i></div><div class="lab"><span>Espresso</span><span>Moka</span><span>Pour-over</span><span>Press</span></div></div>`})():'';
+  openModal(`<div class="hero">${pic(it)}</div>
+    <h2 class="mt">${esc(it.name)}</h2><p class="ms">${esc(sub(it))}</p>
+    <p class="price">About ${money(it.price||0)}${it.cat==='bean'&&it.size_g?` · ${it.size_g} g`:''}</p>
+    <p class="note">${esc(it.note)}</p>${specs(it)}${rng}${it.updated_at?`<p class="disc" style="margin:-8px 0 14px">Checked ${new Date(it.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>`:''}
+    <div class="buy">
+      ${buyLinks(it,q)}
+      <button class="sec" id="toggleSetup">${inSetup?'Remove from my setup':'Add to my setup'} <small>${inSetup?'−':'+'}</small></button>
+    </div>
+    <p class="disc">Prices are approximate. We may earn a commission when you buy through these links.</p>`);
+  document.getElementById('toggleSetup').onclick=()=>{
+    if(S.setup.includes(id)){S.setup=S.setup.filter(x=>x!==id);toast('Removed from your setup')}else{S.setup.push(id);toast('Added to your setup')}
+    save();renderSetup();closeModal();
+  };
+}
+function openSetup(){
+  const items=S.setup.map(byId).filter(Boolean), total=items.reduce((a,b)=>a+b.price,0);
+  openModal(`<h2 class="mt">My setup</h2><p class="ms">${items.length?`${items.length} item${items.length>1?'s':''}`:'Nothing here yet'}</p>
+    ${items.length?`<div class="setlist" style="margin-top:14px">${items.map(it=>`<div class="setrow"><div class="th">${pic(it)}</div><div style="min-width:0"><div class="nm2">${esc(it.name)}</div><div class="pp">${sub(it)} · ${money(it.price)}</div></div><button class="rm" data-rm="${it.id}">Remove</button></div>`).join('')}</div>
+    <div class="tot">Total <span>${money(total)}</span></div>`:`<p class="note" style="text-align:center;margin-top:16px">Tap any product and choose “Add to my setup” to build a full kit here.</p>`}`);
+  layer.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.setup=S.setup.filter(x=>x!==b.dataset.rm);save();renderSetup();openSetup()});
+}
+document.getElementById('stack').onclick=openSetup;
+
+/* ---------- boot ---------- */
+function renderCur(){}
+
+function mergeCatalog(){
+  const live=x=>x.status!=='discontinued';
+  GEAR=[...RAW.gear.filter(live),...RAW.beans.filter(live).map(b=>({...b,cat:'bean'}))];
+}
+async function boot(){
+  const cfg=window.CATALOG_CONFIG||{};
+  if(!window.supabase||!cfg.url||!cfg.anonKey){LOAD='offline';renderAll(true);return}
+  SB=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true}});
+  await loadCatalog(true);
+  SB.auth.onAuthStateChange((ev,s)=>{SESSION=s;setTimeout(checkAdmin,0)});
+  const {data}=await SB.auth.getSession();SESSION=data.session;checkAdmin();
+  if(/[?&]code=/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);
+  if(location.hash==='#owner'&&!SESSION)openSignIn();
+}
+async function loadCatalog(first){
+  try{
+    const [g,b,m]=await Promise.all([SB.from('gear').select('id,doc'),SB.from('beans').select('id,doc'),SB.from('meta').select('id,doc').eq('id','fx').maybeSingle()]);
+    if(g.error||b.error)throw g.error||b.error;
+    RAW.gear=g.data.map(r=>({id:r.id,...r.doc}));RAW.beans=b.data.map(r=>({id:r.id,...r.doc}));
+    if(m.data&&m.data.doc&&m.data.doc.rates)FX={USD:1,...m.data.doc.rates};
+    mergeCatalog();LOAD='ready';
+  }catch(e){LOAD=GEAR.length?'stale':'offline'}
+  if(first)renderAll(true);else{layout(false);renderSheet();renderSetup()}
+}
+async function checkAdmin(){
+  isEditor=false;
+  if(SESSION){const {data}=await SB.rpc('is_admin');isEditor=data===true}
+  if(isEditor)await loadPending();else{PENDING=[];updateReviewBtn()}
+}
+async function loadPending(){
+  const {data}=await SB.from('proposals').select('id,doc,created_at').eq('status','pending').order('created_at');
+  PENDING=(data||[]).map(r=>({...r.doc,id:r.id}));updateReviewBtn();
+  if(layer.querySelector('#reviewList'))openReview();
+}
+function updateReviewBtn(){const rb=document.getElementById('reviewBtn');rb.hidden=!PENDING.length;rb.textContent=`Review ${PENDING.length}`}
+function openSignIn(){
+  if(!SB){toast('Sign-in isn’t available right now.');return}
+  openModal(`<h2 class="mt">Owner sign in</h2><p class="ms">We’ll email you a one-time sign-in link.</p>
+    <form id="signin" style="margin-top:18px;display:flex;flex-direction:column;gap:10px">
+      <label class="slabel" for="semail">Email</label>
+      <input class="sinput" id="semail" type="email" autocomplete="email" required>
+      <button class="dark-pill" type="submit" style="margin-top:8px">Email me a sign-in link</button>
+      <p class="ms" id="smsg" aria-live="polite" style="text-align:left"></p></form>`);
+  const f=document.getElementById('signin'), msg=document.getElementById('smsg');
+  setTimeout(()=>document.getElementById('semail').focus(),50);
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();const btn=f.querySelector('button');btn.disabled=true;msg.textContent='Sending…';
+    const {error}=await SB.auth.signInWithOtp({email:document.getElementById('semail').value.trim(),options:{emailRedirectTo:location.origin+location.pathname}});
+    btn.disabled=false;
+    msg.textContent=error?'Couldn’t send the link. Wait a minute and try again.':'Check your inbox and open the link on this device.';
+  });
+}
+function openAbout(){
+  openModal(`<h2 class="mt">About</h2><div class="note" style="margin-top:14px">
+    <p>Brewfinder helps you build a coffee setup. Answer a few questions and it narrows the catalog to the grinders, espresso machines, brewers, kettles, scales and beans that fit how you drink coffee.</p>
+    <p><strong>Affiliate disclosure.</strong> Some links on this site are affiliate links. If you buy through them, we may earn a small commission at no extra cost to you. This never affects which products are listed or how they’re ranked.</p>
+    <p>Prices are approximate and checked regularly, but always confirm the current price with the retailer before buying.</p></div>`);
+}
+
+/* ---------- review queue (editors only) ---------- */
+const KIND={add:'New',update:'Update',discontinue:'Discontinue'};
+function fmtVal(k,v){if(k==='price')return money(Number(v)||0);if(Array.isArray(v))return v.map(x=>typeof x==='object'?(x.label||x.title||''):x).join(', ');if(v&&typeof v==='object')return JSON.stringify(v);return String(v)}
+function propHtml(p){
+  let body='';
+  if(p.kind==='update'&&p.changes){
+    body=`<div class="diff">${Object.keys(p.changes).map(k=>`<span>${esc(k)}</span><span>${p.previous&&p.previous[k]!==undefined?`<s>${esc(fmtVal(k,p.previous[k]))}</s> → `:''}${esc(fmtVal(k,p.changes[k]))}</span>`).join('')}</div>`;
+  }else if(p.kind==='add'&&p.data){
+    const d=p.data;body=`<div class="diff"><span>price</span><span>${esc(money(Number(d.price)||0))}</span>${['brand','roaster','origin','burr','heat','roast'].filter(k=>d[k]).map(k=>`<span>${k}</span><span>${esc(d[k])}</span>`).join('')}</div>`;
+  }
+  const src=(p.sources||[]).map(x=>({t:x.title||x.url,u:safeUrl(x.url)})).filter(x=>x.u).slice(0,4);
+  return `<div class="prop"><div class="top"><span class="what">${esc(p.item_name||p.doc_id)}</span><span class="kind">${KIND[p.kind]||esc(p.kind)}${(()=>{const c=p.collection==='beans'?'bean':((p.data&&p.data.cat)||(RAW.gear.find(g=>g.id===p.doc_id)||{}).cat||'');return c?' · '+esc(c==='espresso'?'machine':c):''})()}</span></div>
+    ${p.reason?`<div class="why">${esc(p.reason)}</div>`:''}${body}
+    ${src.length?`<div class="src">${src.map(x=>`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t).slice(0,48)} ↗</a>`).join('')}</div>`:''}
+    <div class="acts"><button class="ok" data-ok="${esc(p.id)}">Approve</button><button class="no" data-no="${esc(p.id)}">Reject</button></div></div>`;
+}
+async function decide(id,ok){
+  const {error}=await SB.rpc(ok?'apply_proposal':'reject_proposal',{pid:id});
+  if(error){toast('Couldn’t save that. Try again.');return false}
+  toast(ok?'Approved':'Rejected');
+  PENDING=PENDING.filter(p=>p.id!==id);updateReviewBtn();
+  if(layer.querySelector('#reviewList'))openReview();
+  return true;
+}
+function openReview(){
+  openModal(`<h2 class="mt">Review queue</h2><p class="ms">${PENDING.length?`${PENDING.length} change${PENDING.length>1?'s':''} from the research agent`:'All caught up'}</p>
+    ${PENDING.length>1?`<div class="allbar"><span class="ms" style="margin:0">Approve applies the change to the live site.</span><button class="pill" id="okAll">Approve all</button></div>`:''}
+    <div id="reviewList">${PENDING.map(propHtml).join('')}</div>`);
+  const list=document.getElementById('reviewList');
+  list.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;b.disabled=true;const ok=!!b.dataset.ok;if(await decide(b.dataset.ok||b.dataset.no,ok)&&ok)loadCatalog(false)});
+  const all=document.getElementById('okAll');
+  if(all)all.onclick=async()=>{all.disabled=true;for(const p of [...PENDING])await decide(p.id,true);loadCatalog(false)};
+}
+document.getElementById('reviewBtn').onclick=openReview;
+
+
+function renderAll(fresh){
+  TABS.forEach(t=>document.getElementById('tab-'+t.key).setAttribute('aria-selected',t.key===S.tab));
+  renderSheet();layout(fresh);renderSetup();
+}
+renderAll(true);boot();
+</script>
+</body>
+</html>
