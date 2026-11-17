@@ -15,7 +15,7 @@
   --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c;
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --icon-inactive:var(--grey-400);
-  --surface-page:var(--grey-0); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-sunken:var(--grey-200);
+  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-sunken:var(--grey-200);
   --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --overlay-scrim:rgba(17,17,17,.32);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-control:0 1px 4px rgba(17,17,17,.10);
 
@@ -32,69 +32,63 @@
 
 [hidden]{display:none!important}
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;font-weight:400;background:var(--surface-page);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.4;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+html,body{height:100%}
+body{margin:0;font-weight:400;background:var(--surface-page);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.4;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
 
 /* ---------- header ---------- */
-.top{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--gap-controls);background:var(--surface-page);
-  padding:calc(12px + env(safe-area-inset-top,0px)) max(var(--gutter-page),env(safe-area-inset-right,0px)) 12px max(var(--gutter-page),env(safe-area-inset-left,0px))}
-.icon-btn{border:0;background:none;width:40px;height:40px;display:grid;place-items:center;position:relative;color:var(--text-primary);border-radius:var(--radius-control)}
-.icon-btn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-#menuBtn{justify-self:start;margin-left:-8px}
-.tabs{display:flex;gap:clamp(14px,2vw,28px);min-width:0;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tabs button{border:0;background:none;padding:8px 0;font-size:17px;line-height:1.25;white-space:nowrap;color:var(--text-secondary);transition:color .2s}
-.tabs button[aria-selected="true"]{color:var(--text-primary)}
-@media (hover:hover){.tabs button:hover{color:var(--text-primary)}}
-.right{justify-self:end;display:flex;align-items:center;gap:var(--gap-stack);margin-right:-8px}
-.count{position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 4px;border-radius:var(--radius-control);background:var(--action-primary);color:var(--text-on-action);font-size:11px;line-height:16px;text-align:center}
-.review{border:0;background:var(--accent);color:var(--text-on-accent);height:32px;padding:0 var(--inset-control);border-radius:var(--radius-control);font-size:13px}
+.top{position:fixed;inset:0 0 auto;z-index:5;display:grid;background:var(--surface-page);grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+  padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px max(24px,env(safe-area-inset-left,0px));pointer-events:none}
+.top>*{pointer-events:auto}
+.logo{justify-self:start;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-primary);font-weight:400;letter-spacing:-.03em;font-size:17px}
+.tabs{display:flex;gap:2px;background:var(--surface-sunken);padding:4px;border-radius:var(--radius-control)}
+.tabs button{border:0;background:transparent;width:56px;height:44px;border-radius:var(--radius-control);display:grid;place-items:center;color:var(--text-secondary);transition:background .2s,color .2s}
+.tabs button[aria-selected="true"]{background:var(--surface-raised);color:var(--text-primary);box-shadow:var(--shadow-control)}
+.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.right{justify-self:end;display:flex;align-items:center;gap:10px}
+.dark-pill{border:0;background:var(--action-primary);color:var(--text-on-action);height:48px;padding:0 24px;border-radius:var(--radius-control);font-weight:400;font-size:15px}
+.circle{border:0;background:var(--surface-raised);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;box-shadow:var(--shadow-control),0 0 0 1px var(--border-subtle) inset}
+.circle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.review{border:0;background:var(--accent);color:var(--text-on-accent);height:36px;padding:0 14px;border-radius:var(--radius-control);font-size:13px;font-weight:400}
 
-/* ---------- product grid ---------- */
-.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(36px,4.5vw,72px) var(--gutter-page);
-  padding:clamp(24px,3vw,48px) max(var(--gutter-page),env(safe-area-inset-right,0px)) 0 max(var(--gutter-page),env(safe-area-inset-left,0px));min-height:60vh;align-content:start}
-@media (max-width:1100px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.p{border:0;background:none;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;gap:var(--inset-control);min-width:0;text-align:center}
+/* ---------- stage: product grid ---------- */
+.stage{position:fixed;inset:0;z-index:1;overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-content:start;
+  gap:clamp(32px,4vw,64px) var(--gutter-page);padding:96px max(var(--gutter-page),env(safe-area-inset-right,0px)) 320px max(var(--gutter-page),env(safe-area-inset-left,0px))}
+@media (max-width:1100px){.stage{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.p{border:0;background:none;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;gap:var(--gap-controls);min-width:0;text-align:center}
 .p .img{display:block;width:100%;aspect-ratio:1;padding:10%;transition:transform .2s ease}
 .p .img>svg,.p .img>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
-.p .nm{font-size:17px;line-height:1.25;text-wrap:balance}
+.p .nm{font-size:clamp(14px,1.15vw,17px);line-height:1.25;text-wrap:balance}
 @media (hover:hover){.p:hover .img{transform:translateY(-4px)}}
 .p:active .img{transform:scale(.97)}
 :root[data-theme="dark"] .p .img>svg{filter:drop-shadow(0 0 .7px rgba(255,255,255,.4))}
-.empty{grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:15vh 0;font-size:17px}
+.empty{grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:12vh 0;font-size:16px}
 
-/* ---------- footer ---------- */
-.foot{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap-stack) var(--inset-surface-lg);padding:clamp(72px,10vw,140px) var(--gutter-page) calc(120px + env(safe-area-inset-bottom,0px))}
-.foot button,.foot span{border:0;background:none;padding:0;font-size:15px;color:var(--text-secondary)}
-@media (hover:hover){.foot button:hover{color:var(--text-primary)}}
-
-/* ---------- help me choose ---------- */
-.helper{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 16px));
-  border:0;background:var(--action-primary);color:var(--text-on-action);height:48px;padding:0 var(--inset-surface);border-radius:var(--radius-control);font-size:15px;box-shadow:var(--shadow-control);white-space:nowrap}
-.card{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 16px));
+/* ---------- question card ---------- */
+.card{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:max(28px,calc(env(safe-area-inset-bottom,0px) + 16px));
   width:min(940px,calc(100vw - 48px));background:var(--surface-raised);border-radius:var(--radius-surface);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle) inset;
-  padding:22px clamp(20px,2.4vw,36px) clamp(24px,2.4vw,36px);animation:qin .3s cubic-bezier(.2,.8,.2,1)}
-.card-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:24px;font-size:13px;color:var(--text-secondary)}
-.card-top .l{justify-self:start}.card-top .r{justify-self:end;display:flex;gap:var(--inset-control)}
+  padding:22px clamp(20px,2.4vw,36px) clamp(24px,2.4vw,36px)}
+.card-top{display:flex;align-items:center;justify-content:space-between;min-height:24px;font-size:13px;color:var(--text-secondary)}
 .ghost{border:0;background:none;color:var(--text-secondary);font-size:13px;padding:2px 0}
 .ghost:hover{color:var(--text-primary)}
 .ghost[disabled]{visibility:hidden}
-.q{font-size:clamp(24px,2.3vw,36px);font-weight:300;letter-spacing:-.015em;text-align:center;margin:4px 0 clamp(18px,2vw,30px);text-wrap:balance}
+.q{font-size:clamp(24px,2.3vw,36px);font-weight:300;letter-spacing:-.025em;text-align:center;margin:4px 0 clamp(18px,2vw,30px);text-wrap:balance}
 .qsub{text-align:center;color:var(--text-secondary);font-size:15px;margin:-14px 0 22px}
-.opts{display:flex;gap:var(--gap-controls)}
-.opt{flex:1 1 0;min-width:0;border:0;background:var(--surface-control);border-radius:var(--radius-option);padding:clamp(18px,2.4vh,30px) 10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--gap-tight);transition:background .15s,transform .12s}
+.opts{display:flex;gap:12px}
+.opt{flex:1 1 0;min-width:0;border:0;background:var(--surface-control);border-radius:var(--radius-option);padding:clamp(18px,2.4vh,30px) 10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:background .15s,transform .12s}
 .opt b{font-size:clamp(15px,1.15vw,18px);font-weight:400}
 .opt span{font-size:clamp(13px,1vw,16px);color:var(--text-secondary)}
 .opt:active{transform:scale(.98)}
 @media (hover:hover){.opt:hover{background:var(--surface-control-hover)}}
 .opt[disabled]{opacity:.35;cursor:default}
-.done-acts{display:flex;justify-content:center;gap:var(--gap-controls)}
+.done-acts{display:flex;justify-content:center;gap:10px}
 .soft-pill{border:0;background:var(--surface-control);height:46px;padding:0 22px;border-radius:var(--radius-control);font-weight:400}
-.dark-pill{border:0;background:var(--action-primary);color:var(--text-on-action);height:48px;padding:0 var(--inset-surface);border-radius:var(--radius-control);font-size:15px}
 .anim-in{animation:qin .35s cubic-bezier(.2,.8,.2,1)}
-@keyframes qin{from{opacity:0;transform:translate(var(--qx,0),8px)}}
-.card{--qx:-50%}
+@keyframes qin{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- phone toolbar ---------- */
+.bar{display:none}
 
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
@@ -177,22 +171,35 @@ dl.specs dd{text-align:right}
 
 /* ---------- phone ---------- */
 @media (max-width:760px){
-  .top{grid-template-columns:auto minmax(0,1fr) auto;padding:calc(8px + env(safe-area-inset-top,0px)) max(var(--gutter-page-compact),env(safe-area-inset-right,0px)) 8px max(var(--gutter-page-compact),env(safe-area-inset-left,0px))}
-  .tabs{justify-self:center;max-width:100%}
-  .tabs button{font-size:15px}
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px var(--gutter-page-compact);padding-left:max(var(--gutter-page-compact),env(safe-area-inset-left,0px));padding-right:max(var(--gutter-page-compact),env(safe-area-inset-right,0px))}
-  .p .nm{font-size:15px}
-  .card{left:0;right:0;transform:none;--qx:0;bottom:0;width:auto;border-radius:var(--radius-surface) var(--radius-surface) 0 0;box-shadow:var(--shadow-raised);
-    padding:14px max(var(--gutter-page-compact),env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(var(--gutter-page-compact),env(safe-area-inset-left,0px))}
-  .q{font-size:24px;margin:6px 0 14px}
+  .top{grid-template-columns:auto 1fr auto;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+  .logo{font-size:12.5px;letter-spacing:-.02em}
+  .top{gap:6px}
+  .tabs{justify-self:center}
+  .tabs button{width:clamp(30px,8.6vw,46px);height:40px}
+  .tabs svg{width:21px;height:21px}
+  .right .dark-pill,.right #searchBtn,.right .review{display:none}
+  .circle{width:44px;height:44px}
+  .card{left:0;right:0;transform:none;bottom:0;width:auto;border-radius:var(--radius-surface) var(--radius-surface) 0 0;box-shadow:var(--shadow-raised);
+    padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  .q{font-size:24px;margin:2px 0 14px}
   .qsub{margin:-8px 0 14px}
-  .opts{overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter-page-compact));padding:0 var(--gutter-page-compact) 2px;scroll-snap-type:x mandatory}
+  .opts{overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px;scroll-snap-type:x mandatory}
   .opts::-webkit-scrollbar{display:none}
   .opt{flex:0 0 calc((100% - 24px)/3.1);scroll-snap-align:start;padding:16px 8px}
+  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;background:var(--surface-raised);border-top:1px solid var(--border-subtle);
+    padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .stack{border:0;background:none;width:64px;height:48px;position:relative;padding:0}
+  .stack .t{position:absolute;bottom:0;width:40px;height:40px;border-radius:9px;background:var(--surface-control);box-shadow:var(--shadow-control);padding:3px}
+  .stack .t>svg,.stack .t>img{width:100%;height:100%;object-fit:contain}
+  .stack .none{position:absolute;inset:4px 18px 4px 0;border:1.5px dashed var(--border-subtle);border-radius:9px}
+  .bar .soft-pill{height:48px;padding:0 26px}
+  .bar .circle{box-shadow:none;background:var(--surface-control)}
   .modal{max-width:none;border-radius:var(--radius-surface) var(--radius-surface) 0 0;max-height:92vh;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
   .scrim{align-items:flex-end;padding:0}
   .grab{display:block;width:38px;height:5px;border-radius:3px;background:var(--surface-sunken);margin:0 auto 6px}
   .bgrid{grid-template-columns:repeat(2,1fr);gap:20px 12px}
+  .stage{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px var(--gutter-page-compact);padding-left:max(var(--gutter-page-compact),env(safe-area-inset-left,0px));padding-right:max(var(--gutter-page-compact),env(safe-area-inset-right,0px))}
+  .p .nm{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 b,strong{font-weight:400}
@@ -202,29 +209,28 @@ b,strong{font-weight:400}
 </head>
 <body>
 <header class="top">
-  <button class="icon-btn" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-  <nav class="tabs" role="tablist" aria-label="Product type" id="tabs"></nav>
+  <a class="logo" href="#grinders" aria-label="catalog.cafe home">catalog.cafe</a>
+  <div class="tabs" role="tablist" aria-label="Product type" id="tabs"></div>
   <div class="right">
     <button class="review" id="reviewBtn" hidden></button>
-    <button class="icon-btn" id="setupBtn" aria-label="My setup"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="count" id="setupCount" hidden></span></button>
+    <button class="dark-pill" id="browseBtn">Browse all</button>
+    <button class="circle" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+    <button class="circle" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
   </div>
 </header>
 
-<main class="grid" id="stage" aria-label="Products"></main>
+<main class="stage" id="stage" aria-label="Products"></main>
 
-<footer class="foot">
-  <span>catalog.cafe</span>
-  <button id="fAbout">About</button>
-  <button id="fDisc">Affiliate disclosure</button>
-  <button id="fSearch">Search</button>
-  <button id="fOwner">Owner sign in</button>
-</footer>
-
-<button class="helper" id="helper">Help me choose</button>
-<section class="card" id="card" aria-live="polite" hidden>
-  <div class="card-top"><button class="ghost l" id="back">← Back</button><span id="step"></span><span class="r"><button class="ghost" id="reset">Start over</button><button class="ghost" id="closeCard">Close</button></span></div>
+<section class="card" id="card" aria-live="polite">
+  <div class="card-top"><button class="ghost" id="back">← Back</button><span id="step"></span><button class="ghost" id="reset">Start over</button></div>
   <div id="qwrap"></div>
 </section>
+
+<nav class="bar" aria-label="Toolbar">
+  <button class="stack" id="stack" aria-label="My setup"></button>
+  <button class="soft-pill" id="browseBtn2">Browse all</button>
+  <button class="circle" id="searchBtn2" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+</nav>
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/config.js"></script>
@@ -491,12 +497,13 @@ const byPop=(a,b)=>(a.pop||99)-(b.pop||99);
 
 /* ---------- tabs ---------- */
 const tabsEl=document.getElementById('tabs');
-tabsEl.innerHTML=TABS.map(t=>`<button role="tab" id="tab-${t.key}">${t.label.replace(' machines','')}</button>`).join('');
+tabsEl.innerHTML=TABS.map(t=>`<button role="tab" id="tab-${t.key}" aria-label="${t.label}" title="${t.label}"><svg viewBox="0 0 24 24">${ICON[t.key]}</svg></button>`).join('');
 tabsEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.id.slice(4);if(k!==S.tab)location.hash=k});
-window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(k==='owner'){openSignIn();return}if(TABS.some(t=>t.key===k)&&k!==S.tab){S.tab=k;save();closeModal();scrollTo(0,0);renderAll(true)}});
+window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(k==='owner'){openSignIn();return}if(TABS.some(t=>t.key===k)&&k!==S.tab){S.tab=k;save();closeModal();renderAll(true)}});
 
 /* ---------- product grid ---------- */
-const stage=document.getElementById('stage'), cardEl=document.getElementById('card'), helperEl=document.getElementById('helper');
+const stage=document.getElementById('stage'), cardEl=document.getElementById('card');
+const phoneMQ=matchMedia('(max-width:760px)');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let nodes=new Map(), shownTab=null;
 
@@ -510,7 +517,7 @@ function makeEl(it){
 function layout(fresh){
   const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), keep=new Set(matches(t,S.answers[t.key]).map(x=>x.id));
   const rebuild=fresh||shownTab!==t.key;
-  if(rebuild){stage.innerHTML='';nodes=new Map();shownTab=t.key}
+  if(rebuild){stage.innerHTML='';nodes=new Map();shownTab=t.key;stage.scrollTop=0}
   stage.querySelectorAll('.empty').forEach(e=>e.remove());
   const first=new Map();
   nodes.forEach((n,id)=>{if(!n.hidden)first.set(id,n.getBoundingClientRect())});
@@ -558,23 +565,28 @@ function layout(fresh){
   entering.forEach((n,i)=>n.animate([{opacity:0,filter:'blur(8px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:rebuild?Math.min(i,17)*30:180,easing:'ease-out',fill:'backwards'}));
 }
 const renderField=layout;
+// keep the first and last rows clear of the fixed header and question card
+function pad(){
+  stage.style.paddingTop=(document.querySelector('.top').getBoundingClientRect().bottom+16)+'px';
+  stage.style.paddingBottom=(innerHeight-cardEl.getBoundingClientRect().top+32)+'px';
+}
+new ResizeObserver(pad).observe(cardEl);
+addEventListener('resize',pad);
+phoneMQ.addEventListener('change',()=>{renderSheet();pad()});
 
-/* ---------- help me choose: the question card ---------- */
+
+/* ---------- question card ---------- */
 const qwrap=document.getElementById('qwrap');
-let cardOpen=false;
 function label(o){return typeof o[1]==='function'?o[1]():o[1]}
-function setCard(open){cardOpen=open;cardEl.hidden=!open;helperEl.hidden=open;if(open)renderSheet()}
 function renderSheet(){
   const t=tab(), ans=S.answers[t.key], step=stepOf(t), n=matches(t,ans).length, any=Object.keys(ans).length>0;
-  const total=GEAR.filter(x=>x.cat===t.cat).length;
-  helperEl.textContent=any?`Showing ${n} of ${total} · Change`:'Help me choose';
   document.getElementById('back').disabled=!any;
   document.getElementById('reset').disabled=!any;
   document.getElementById('step').textContent=LOAD==='ready'||LOAD==='stale'?`${n} ${n===1?'match':'matches'}`:'';
   if(step<0){
-    qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${n?`${n} ${n===1?'match':'matches'} for you`:'No exact match'}</h2>
+    qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${n?'Here’s your shortlist':'No exact match'}</h2>
       <p class="qsub">${n?'Tap a product for specs and where to buy it.':'Go back a step, or start over.'}</p>
-      <div class="done-acts">${n?`<button class="dark-pill" data-act="done">Show ${n===1?'it':'them'}</button>`:''}<button class="soft-pill" data-act="reset">Start over</button></div></div>`;
+      <div class="done-acts">${n?`<button class="soft-pill" data-act="browse">See all ${n}</button>`:''}<button class="soft-pill" data-act="reset">Start over</button></div></div>`;
     return;
   }
   const q=t.qs[step];
@@ -585,18 +597,26 @@ function renderSheet(){
 }
 qwrap.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');
-  if(a){a.dataset.act==='done'?setCard(false):resetTab();return}
+  if(a){a.dataset.act==='browse'?openBrowse(true):resetTab();return}
   const b=e.target.closest('.opt');if(!b||b.disabled)return;
   S.answers[S.tab][b.dataset.q]=b.dataset.v;save();layout(false);renderSheet();
 });
 function resetTab(){S.answers[S.tab]={};save();layout(false);renderSheet()}
-helperEl.onclick=()=>setCard(true);
-document.getElementById('closeCard').onclick=()=>setCard(false);
 document.getElementById('reset').onclick=resetTab;
 document.getElementById('back').onclick=()=>{const t=tab(),ans=S.answers[t.key];const last=[...t.qs].reverse().find(q=>ans[q.id]);if(!last)return;delete ans[last.id];save();layout(false);renderSheet()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cardOpen&&!layer.innerHTML)setCard(false)});
 
-/* ---------- search, menu ---------- */
+/* ---------- browse all, search, menu ---------- */
+function openBrowse(onlyMatches){
+  const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), m=new Set(matches(t,S.answers[t.key]).map(x=>x.id));
+  const anyAns=Object.keys(S.answers[t.key]).length>0;
+  const showAll=!onlyMatches||!anyAns;
+  const items=showAll?all:all.filter(x=>m.has(x.id));
+  openModal(`<h2 class="mt">${t.label}</h2>
+    ${anyAns?`<div class="seg"><button data-seg="m" aria-pressed="${!showAll}">Your matches (${m.size})</button><button data-seg="a" aria-pressed="${showAll}">All (${all.length})</button></div>`:`<p class="ms">${all.length} products</p>`}
+    <div class="bgrid">${items.map(it=>`<button class="bitem ${showAll&&anyAns&&!m.has(it.id)?'dim':''}" data-open="${esc(it.id)}"><span class="bimg">${pic(it)}</span><span class="nm">${esc(it.name)}</span><span class="pr">${money(it.price||0)}</span></button>`).join('')||'<p class="ms">Nothing here yet.</p>'}</div>`,'wide');
+  layer.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>openBrowse(b.dataset.seg==='m'));
+  layer.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProduct(b.dataset.open));
+}
 function openSearch(){
   openModal(`<input class="sinput" id="sq" type="search" placeholder="Search grinders, machines, beans…" aria-label="Search products" autocomplete="off"><div class="sres" id="sres"></div>`);
   const inp=document.getElementById('sq'), out=document.getElementById('sres');
@@ -612,33 +632,33 @@ function openSearch(){
 }
 function openMenu(){
   const curs=Object.keys(CURS).filter(c=>FX[c]);
-  openModal(`<h2 class="mt">catalog.cafe</h2><div class="mlist">
-    <button class="mrow" id="mSearch">Search</button>
-    <button class="mrow" id="mHelp">Help me choose <span>${tab().label}</span></button>
+  openModal(`<h2 class="mt">Menu</h2><div class="mlist">
     <button class="mrow" id="mSetup">My setup <span>${S.setup.length} item${S.setup.length===1?'':'s'}</span></button>
+    <button class="mrow" id="mBrowse">Browse all ${tab().label.toLowerCase()} <span>${GEAR.filter(x=>x.cat===tab().cat).length}</span></button>
     ${isEditor?`<button class="mrow" id="mReview">Review queue <span>${PENDING.length} waiting</span></button>`:''}
     <label class="mrow" for="mCur">Currency <select id="mCur">${curs.map(c=>`<option value="${c}" ${c===cur()?'selected':''}>${c} · ${CURS[c]}</option>`).join('')}</select></label>
+    <button class="mrow" id="mReset">Start over <span>${tab().label}</span></button>
     <button class="mrow" id="mAbout">About and affiliate disclosure</button>
     ${SESSION?`<button class="mrow" id="mOut">Sign out <span>${esc(SESSION.user.email||'')}</span></button>`:`<button class="mrow" id="mIn">Owner sign in</button>`}</div>`);
-  document.getElementById('mSearch').onclick=openSearch;
-  document.getElementById('mHelp').onclick=()=>{closeModal();setCard(true)};
   document.getElementById('mAbout').onclick=openAbout;
   const mi=document.getElementById('mIn');if(mi)mi.onclick=openSignIn;
   const mo=document.getElementById('mOut');if(mo)mo.onclick=async()=>{await SB.auth.signOut();closeModal();toast('Signed out')};
   document.getElementById('mSetup').onclick=openSetup;
+  document.getElementById('mBrowse').onclick=()=>openBrowse(false);
   const r=document.getElementById('mReview');if(r)r.onclick=openReview;
-  document.getElementById('mCur').onchange=e=>{S.cur=e.target.value;save();renderSheet();toast(`Prices in ${S.cur}`)};
+  document.getElementById('mCur').onchange=e=>{S.cur=e.target.value;save();renderSheet();layout(false);toast(`Prices in ${S.cur}`)};
+  document.getElementById('mReset').onclick=()=>{resetTab();closeModal()};
 }
+document.getElementById('browseBtn').onclick=()=>openBrowse(true);
+document.getElementById('browseBtn2').onclick=()=>openBrowse(true);
+document.getElementById('searchBtn').onclick=openSearch;
+document.getElementById('searchBtn2').onclick=openSearch;
 document.getElementById('menuBtn').onclick=openMenu;
-document.getElementById('setupBtn').onclick=()=>openSetup();
-document.getElementById('fAbout').onclick=()=>openAbout();
-document.getElementById('fDisc').onclick=()=>openAbout();
-document.getElementById('fSearch').onclick=openSearch;
-document.getElementById('fOwner').onclick=()=>SESSION?openMenu():openSignIn();
 /* ---------- my setup ---------- */
 function renderSetup(){
-  const n=S.setup.map(byId).filter(Boolean).length, c=document.getElementById('setupCount');
-  c.hidden=!n;c.textContent=n;
+  const items=S.setup.map(byId).filter(Boolean);
+  const st=document.getElementById('stack');
+  st.innerHTML=items.length?items.slice(-3).map((it,i)=>`<span class="t" style="left:${i*12}px;transform:rotate(${(i-1)*6}deg)">${pic(it)}</span>`).join(''):'<span class="none"></span>';
 }
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1600)}
 
@@ -696,6 +716,7 @@ function openSetup(){
     <div class="tot">Total <span>${money(total)}</span></div>`:`<p class="note" style="text-align:center;margin-top:16px">Tap any product and choose “Add to my setup” to build a full kit here.</p>`}`);
   layer.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.setup=S.setup.filter(x=>x!==b.dataset.rm);save();renderSetup();openSetup()});
 }
+document.getElementById('stack').onclick=openSetup;
 
 /* ---------- boot ---------- */
 function renderCur(){}
