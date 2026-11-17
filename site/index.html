@@ -483,7 +483,7 @@ function sub(it){
     case 'brewer':return it.method;
     case 'kettle':return it.electric?'Electric':'Stovetop';
     case 'scale':return (it.spec||'').split(',').slice(0,2).join(',');
-    case 'bean':return `${it.origin||''} · ${it.roast||''} roast`;
+    case 'bean':return [it.roaster,it.origin].filter(Boolean).join(' · ');
   }
 }
 
@@ -505,7 +505,8 @@ window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(k===
 const stage=document.getElementById('stage'), cardEl=document.getElementById('card');
 const phoneMQ=matchMedia('(max-width:760px)');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let nodes=new Map(), shownTab=null;
+let nodes=new Map(), shownTab=null, shownKey='', limit=0;
+const PAGE=60;
 
 function makeEl(it){
   const b=document.createElement('button');
@@ -515,9 +516,15 @@ function makeEl(it){
   return b;
 }
 function layout(fresh){
-  const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), keep=new Set(matches(t,S.answers[t.key]).map(x=>x.id));
+  const t=tab(), cat=GEAR.filter(x=>x.cat===t.cat).sort(byPop), list=matches(t,S.answers[t.key]);
   const rebuild=fresh||shownTab!==t.key;
+  const key=t.key+JSON.stringify(S.answers[t.key]);
+  if(rebuild||key!==shownKey){limit=PAGE;shownKey=key;if(!rebuild)stage.scrollTop=0}
   if(rebuild){stage.innerHTML='';nodes=new Map();shownTab=t.key;stage.scrollTop=0}
+  // only the first `limit` matches are drawn; scrolling near the end draws more
+  more=list.length>limit;
+  const keep=new Set(list.slice(0,limit).map(x=>x.id));
+  const all=cat.length>PAGE?cat.filter(x=>keep.has(x.id)||nodes.has(x.id)):cat;
   stage.querySelectorAll('.empty').forEach(e=>e.remove());
   const first=new Map();
   nodes.forEach((n,id)=>{if(!n.hidden)first.set(id,n.getBoundingClientRect())});
@@ -548,7 +555,7 @@ function layout(fresh){
   if(!keep.size){
     const msg=LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.'
       :LOAD==='loading'?'Loading the catalog…'
-      :!all.length?(t.cat==='bean'?'No beans in the catalog yet.':'Nothing in this category yet.')
+      :!cat.length?(t.cat==='bean'?'No beans in the catalog yet.':'Nothing in this category yet.')
       :'Nothing matches every answer. Go back a step or choose “No preference”.';
     stage.insertAdjacentHTML('beforeend',`<div class="empty">${msg}</div>`);
   }
@@ -565,6 +572,14 @@ function layout(fresh){
   entering.forEach((n,i)=>n.animate([{opacity:0,filter:'blur(8px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:rebuild?Math.min(i,17)*30:180,easing:'ease-out',fill:'backwards'}));
 }
 const renderField=layout;
+let more=false, ticking=false;
+stage.addEventListener('scroll',()=>{
+  if(!more||ticking)return;
+  if(stage.scrollTop+stage.clientHeight>stage.scrollHeight-stage.clientHeight*1.5){
+    ticking=true;limit+=PAGE;
+    requestAnimationFrame(()=>{layout(false);ticking=false});
+  }
+},{passive:true});
 // keep the first and last rows clear of the fixed header and question card
 function pad(){
   stage.style.paddingTop=(document.querySelector('.top').getBoundingClientRect().bottom+16)+'px';
@@ -675,7 +690,7 @@ function openModal(html,cls){
 function closeModal(){layer.innerHTML='';lastFocus&&lastFocus.focus&&lastFocus.focus()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&layer.innerHTML)closeModal()});
 function specs(it){
-  const r=({bean:()=>[['Roaster',it.roaster||'—'],['Origin',it.origin||'—'],['Process',it.process||'—'],['Roast',it.roast||'—'],['Tasting notes',(it.notes||[]).join(', ')||'—'],['Bag',it.size_g?`${it.size_g} g · ${money(it.price/it.size_g*100)} per 100 g`:'—']],
+  const r=({bean:()=>[['Roaster',it.roaster||'—'],['Origin',it.origin||'—'],['Process',it.process||'—'],['Variety',it.variety||'—'],['Roast',it.degree||it.roast||'—'],['Tasting notes',(it.notes||[]).join(', ')||'—'],['Bag',it.size_g?`${it.size_g} g · ${money(it.price/it.size_g*100)} per 100 g`:'—']],
     grinder:()=>[['Type',it.kind==='hand'?'Hand grinder':it.kind==='hopper'?'Electric, hopper':'Electric, single dose'],['Burrs',it.burr],['Grinds for',(it.does||[]).join(' and ')]],
     espresso:()=>[['Heating',it.heat],['Steam wand',it.milk?(it.auto?'Yes, automatic':'Yes'):'No'],['Grinder',it.builtIn?'Built in':'Buy separately'],['Footprint',['','Compact','Medium','Large'][it.w]]],
     brewer:()=>[['Method',it.method],['Makes',`Up to ${it.cap} cup${it.cap>1?'s':''}`],['You also need',it.needs]],
@@ -698,7 +713,7 @@ function openProduct(id){
   openModal(`<div class="hero">${pic(it)}</div>
     <h2 class="mt">${esc(it.name)}</h2><p class="ms">${esc(sub(it))}</p>
     <p class="price">About ${money(it.price||0)}${it.cat==='bean'&&it.size_g?` · ${it.size_g} g`:''}</p>
-    <p class="note">${esc(it.note)}</p>${specs(it)}${rng}${it.updated_at?`<p class="disc" style="margin:-8px 0 14px">Checked ${new Date(it.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>`:''}
+    <p class="note">${esc(it.note)}</p>${specs(it)}${rng}${it.updated_at?`<p class="disc" style="margin:-8px 0 14px">Checked ${new Date(it.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>`:''}${it.source==='loffee'?'<p class="disc" style="margin:-8px 0 14px">Bean data from Loffee Labs</p>':''}
     <div class="buy">
       ${buyLinks(it,q)}
       <button class="sec" id="toggleSetup">${inSetup?'Remove from my setup':'Add to my setup'} <small>${inSetup?'−':'+'}</small></button>
@@ -735,9 +750,18 @@ async function boot(){
   if(/[?&]code=/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);
   if(location.hash==='#owner'&&!SESSION)openSignIn();
 }
+async function allRows(table){
+  const out=[];
+  for(let from=0;;from+=1000){
+    const r=await SB.from(table).select('id,doc').order('id').range(from,from+999);
+    if(r.error)return r;
+    out.push(...r.data);
+    if(r.data.length<1000)return {data:out};
+  }
+}
 async function loadCatalog(first){
   try{
-    const [g,b,m]=await Promise.all([SB.from('gear').select('id,doc'),SB.from('beans').select('id,doc'),SB.from('meta').select('id,doc').eq('id','fx').maybeSingle()]);
+    const [g,b,m]=await Promise.all([allRows('gear'),allRows('beans'),SB.from('meta').select('id,doc').eq('id','fx').maybeSingle()]);
     if(g.error||b.error)throw g.error||b.error;
     RAW.gear=g.data.map(r=>({id:r.id,...r.doc}));RAW.beans=b.data.map(r=>({id:r.id,...r.doc}));
     if(m.data&&m.data.doc&&m.data.doc.rates)FX={USD:1,...m.data.doc.rates};
@@ -776,6 +800,7 @@ function openSignIn(){
 function openAbout(){
   openModal(`<h2 class="mt">About</h2><div class="note" style="margin-top:14px">
     <p>catalog.cafe helps you build a coffee setup. Answer a few questions and it narrows the catalog to the grinders, espresso machines, brewers, kettles, scales and beans that fit how you drink coffee.</p>
+    <p>Coffee bean listings use data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a>’ Bean Base.</p>
     <p><strong>Affiliate disclosure.</strong> Some links on this site are affiliate links. If you buy through them, we may earn a small commission at no extra cost to you. This never affects which products are listed or how they’re ranked.</p>
     <p>Prices are approximate and checked regularly, but always confirm the current price with the retailer before buying.</p></div>`);
 }
