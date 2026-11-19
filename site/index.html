@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>catalog.cafe</title>
-<meta name="description" content="Build your coffee setup: answer a few questions and see the grinders, espresso machines and beans that fit.">
+<meta name="description" content="Plan your coffee setup: browse espresso machines, grinders, brewers, kettles, scales and beans, and let the setup assistant suggest a kit that fits your budget.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
-/* Layout: a full-screen stage of floating products. Top matches sit large and labelled in the middle,
-   the rest drift around the edges. A floating question card sits at the bottom (desktop) or a sheet (phone). */
+/* Layout: a scrolling browsing pane of product sections on the left and the setup assistant on the right.
+   Each section shows a few rows of small thumbnails; a section opens a category page with filter pills. */
 /* Tokens mirror the catalog.cafe design system. Primitives first, then semantic roles. Components use semantic tokens only. */
 :root{
   --grey-0:#ffffff; --grey-50:#f5f5f5; --grey-100:#f0f0f0; --grey-150:#e8e8e8; --grey-200:#e2e2e2; --grey-400:#a0a0a0; --grey-500:#6b6b6b;
@@ -21,6 +21,7 @@
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
   --radius-control:999px; --radius-option:14px; --radius-surface:22px;
+  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px;
   --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:light;
 }
@@ -36,59 +37,108 @@ html,body{height:100%}
 body{margin:0;font-weight:400;background:var(--surface-page);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.4;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--text-primary);outline-offset:2px}
+/* ---------- layout: browsing pane on the left, setup assistant on the right ---------- */
+.app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) var(--width-sidebar);background:var(--surface-raised)}
+.app.closed{grid-template-columns:minmax(0,1fr) 0}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
+.hdr{flex:none;display:flex;align-items:center;gap:var(--gap-stack);height:calc(var(--height-header) + env(safe-area-inset-top,0px));
+  padding:env(safe-area-inset-top,0px) max(var(--gutter-page-wide),env(safe-area-inset-right,0px)) 0 max(var(--gutter-page-wide),env(safe-area-inset-left,0px))}
+.logo{margin-right:auto;text-decoration:none;color:var(--text-primary);font-size:17px;letter-spacing:-.03em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.icon-btn{border:0;background:var(--surface-control);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--text-primary)}
+@media (hover:hover){.icon-btn:hover{background:var(--surface-control-hover)}}
+.icon-btn.flat{background:none;color:var(--text-secondary)}
+.cta{border:0;background:var(--action-primary);color:var(--text-on-action);height:40px;padding:0 18px;border-radius:var(--radius-control);font-size:14px}
+.app:not(.closed) .cta{display:none}
+.review{border:0;background:var(--accent);color:var(--text-on-accent);height:36px;padding:0 14px;border-radius:var(--radius-control);font-size:13px}
+.main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 max(var(--gutter-page-compact),env(safe-area-inset-right,0px)) var(--inset-surface) max(var(--gutter-page-compact),env(safe-area-inset-left,0px))}
 
-/* ---------- header ---------- */
-.top{position:fixed;inset:0 0 auto;z-index:5;display:grid;background:var(--surface-page);grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
-  padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px max(24px,env(safe-area-inset-left,0px));pointer-events:none}
-.top>*{pointer-events:auto}
-.logo{justify-self:start;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-primary);font-weight:400;letter-spacing:-.03em;font-size:17px}
-.tabs{display:flex;gap:2px;background:var(--surface-sunken);padding:4px;border-radius:var(--radius-control)}
-.tabs button{border:0;background:transparent;width:56px;height:44px;border-radius:var(--radius-control);display:grid;place-items:center;color:var(--text-secondary);transition:background .2s,color .2s}
-.tabs button[aria-selected="true"]{background:var(--surface-raised);color:var(--text-primary);box-shadow:var(--shadow-control)}
-.tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.right{justify-self:end;display:flex;align-items:center;gap:10px}
-.dark-pill{border:0;background:var(--action-primary);color:var(--text-on-action);height:48px;padding:0 24px;border-radius:var(--radius-control);font-weight:400;font-size:15px}
-.circle{border:0;background:var(--surface-raised);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;box-shadow:var(--shadow-control),0 0 0 1px var(--border-subtle) inset}
-.circle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.review{border:0;background:var(--accent);color:var(--text-on-accent);height:36px;padding:0 14px;border-radius:var(--radius-control);font-size:13px;font-weight:400}
+/* home: one section per product type, a few rows of small thumbnails */
+.sec{display:block;padding:var(--inset-control);border-radius:var(--radius-section);cursor:pointer;transition:background .15s}
+@media (hover:hover){.sec:hover{background:var(--surface-control)}}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);min-height:24px;margin-bottom:var(--gap-controls)}
+.sec-t{margin:0;font-size:17px;font-weight:400}
+.va{display:flex;align-items:center;gap:var(--gap-tight);font-size:13px;color:var(--text-primary);text-decoration:none;opacity:0;transition:opacity .15s}
+.va .ic{width:18px;height:18px}
+.sec:hover .va,.sec:focus-within .va{opacity:1}
+@media (hover:none){.va{opacity:1}}
+.thumbs{display:grid;grid-template-columns:repeat(var(--cols,8),var(--size-thumb));gap:var(--gap-thumb)}
+.tb{width:var(--size-thumb);height:var(--size-thumb);border:0;background:none;padding:5px;border-radius:var(--radius-thumb);display:block}
+.tb>svg,.tb>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
+@media (hover:hover){.tb:hover{background:var(--surface-raised)}}
+.more{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;line-height:1.3;padding:0}
+.more span{font-size:11px;color:var(--text-secondary)}
+.sec .ms{text-align:left;margin:0}
 
-/* ---------- stage: product grid ---------- */
-.stage{position:fixed;inset:0;z-index:1;overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-content:start;
-  gap:clamp(32px,4vw,64px) var(--gutter-page);padding:96px max(var(--gutter-page),env(safe-area-inset-right,0px)) 320px max(var(--gutter-page),env(safe-area-inset-left,0px))}
-@media (max-width:1100px){.stage{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.p{border:0;background:none;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;gap:var(--gap-controls);min-width:0;text-align:center}
+/* category page */
+.cat-h{padding:var(--gap-stack) var(--inset-control) var(--inset-surface)}
+.backl{color:var(--text-secondary);font-size:13px;text-decoration:none}
+.cat-row{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-controls) 20px;margin-top:var(--gap-controls)}
+.cat-t{margin:0;font-size:36px;font-weight:300;letter-spacing:-.03em}
+.chips{display:flex;flex-wrap:wrap;gap:var(--gap-stack)}
+.chip{border:1px solid var(--border-subtle);background:none;border-radius:var(--radius-control);height:30px;padding:0 12px;font-size:13px;display:inline-flex;align-items:center;gap:var(--gap-tight);color:var(--text-primary)}
+.chip[aria-pressed="true"]{background:var(--action-primary);border-color:var(--action-primary);color:var(--text-on-action);padding-right:8px}
+.chip .ic{width:14px;height:14px}
+.count{color:var(--text-secondary);font-size:13px;margin:var(--gap-controls) 0 0}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:var(--inset-surface) var(--gap-controls);padding:0 var(--inset-control)}
+.p{border:0;background:none;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;gap:var(--gap-stack);min-width:0;text-align:center}
 .p .img{display:block;width:100%;aspect-ratio:1;padding:10%;transition:transform .2s ease}
 .p .img>svg,.p .img>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
-.p .nm{font-size:clamp(14px,1.15vw,17px);line-height:1.25;text-wrap:balance}
-@media (hover:hover){.p:hover .img{transform:translateY(-4px)}}
-.p:active .img{transform:scale(.97)}
-:root[data-theme="dark"] .p .img>svg{filter:drop-shadow(0 0 .7px rgba(255,255,255,.4))}
-.empty{grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:12vh 0;font-size:16px}
+.p .nm{font-size:13px;line-height:1.3;text-wrap:balance}
+@media (hover:hover){.p:hover .img{transform:translateY(-3px)}}
+.empty{grid-column:1/-1;color:var(--text-secondary);padding:8vh 0;text-align:center}
 
-/* ---------- question card ---------- */
-.card{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:max(28px,calc(env(safe-area-inset-bottom,0px) + 16px));
-  width:min(940px,calc(100vw - 48px));background:var(--surface-raised);border-radius:var(--radius-surface);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle) inset;
-  padding:22px clamp(20px,2.4vw,36px) clamp(24px,2.4vw,36px)}
-.card-top{display:flex;align-items:center;justify-content:space-between;min-height:24px;font-size:13px;color:var(--text-secondary)}
-.ghost{border:0;background:none;color:var(--text-secondary);font-size:13px;padding:2px 0}
-.ghost:hover{color:var(--text-primary)}
-.ghost[disabled]{visibility:hidden}
-.q{font-size:clamp(24px,2.3vw,36px);font-weight:300;letter-spacing:-.025em;text-align:center;margin:4px 0 clamp(18px,2vw,30px);text-wrap:balance}
-.qsub{text-align:center;color:var(--text-secondary);font-size:15px;margin:-14px 0 22px}
-.opts{display:flex;gap:12px}
-.opt{flex:1 1 0;min-width:0;border:0;background:var(--surface-control);border-radius:var(--radius-option);padding:clamp(18px,2.4vh,30px) 10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:background .15s,transform .12s}
-.opt b{font-size:clamp(15px,1.15vw,18px);font-weight:400}
-.opt span{font-size:clamp(13px,1vw,16px);color:var(--text-secondary)}
-.opt:active{transform:scale(.98)}
-@media (hover:hover){.opt:hover{background:var(--surface-control-hover)}}
-.opt[disabled]{opacity:.35;cursor:default}
-.done-acts{display:flex;justify-content:center;gap:10px}
-.soft-pill{border:0;background:var(--surface-control);height:46px;padding:0 22px;border-radius:var(--radius-control);font-weight:400}
-.anim-in{animation:qin .35s cubic-bezier(.2,.8,.2,1)}
-@keyframes qin{from{opacity:0;transform:translateY(8px)}}
+/* footer, pinned under the scrolling pane */
+.foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);flex-wrap:wrap;min-height:var(--height-footer);
+  padding:0 max(var(--gutter-page-wide),env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(var(--gutter-page-wide),env(safe-area-inset-left,0px));font-size:11px;color:var(--text-secondary)}
+.foot nav{display:flex;gap:20px}
+.foot button,.foot a{border:0;background:none;padding:0;font-size:inherit;color:inherit;text-decoration:none}
+@media (hover:hover){.foot button:hover,.foot a:hover{color:var(--text-primary)}}
 
-/* ---------- phone toolbar ---------- */
-.bar{display:none}
+/* setup assistant */
+.side{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;background:var(--surface-raised);border-left:1px solid var(--border-subtle)}
+.app.closed .side{visibility:hidden;border:0}
+.side-h{flex:none;display:flex;align-items:center;justify-content:space-between;height:calc(64px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) var(--inset-control) 0 var(--inset-surface)}
+.side-h h2{margin:0;font-size:15px;font-weight:400}
+.thread{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:var(--gap-stack) var(--inset-surface) var(--inset-control);display:flex;flex-direction:column;gap:var(--gap-controls)}
+.qlab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin:0}
+.qh{margin:0;font-size:24px;font-weight:300;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
+.qs{margin:-6px 0 0;font-size:14px;color:var(--text-secondary)}
+.past{margin:0;font-size:14px;color:var(--text-secondary)}
+.me{align-self:flex-end;max-width:85%;border:0;background:var(--surface-control);border-radius:16px;padding:9px 14px;font-size:14px;text-align:left}
+button.me{cursor:pointer}
+.bot{margin:0;font-size:15px}
+.ans{display:flex;flex-direction:column;gap:var(--gap-stack);margin:0 calc(var(--gap-stack) * -1)}
+.ans button{border:0;background:var(--surface-control);border-radius:var(--radius-thumb);min-height:48px;padding:12px var(--inset-control);text-align:left;display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);font-size:15px;color:var(--text-primary)}
+.ans button small{display:block;font-size:12px;color:var(--text-secondary);margin-top:2px}
+@media (hover:hover){.ans button:hover{background:var(--surface-control-hover)}}
+.ans .go{background:var(--action-primary);color:var(--text-on-action);margin-top:var(--gap-stack)}
+@media (hover:hover){.ans .go:hover{background:var(--action-primary)}}
+.ans .go[disabled]{opacity:.35;cursor:default}
+.box{width:18px;height:18px;border-radius:5px;border:1.25px solid var(--text-secondary);display:grid;place-items:center;flex:none}
+.box .ic{width:14px;height:14px;stroke-width:2.25;visibility:hidden}
+[aria-pressed="true"] .box{background:var(--action-primary);border-color:var(--action-primary);color:var(--text-on-action)}
+[aria-pressed="true"] .box .ic{visibility:visible}
+.tune{border:1px solid var(--border-subtle);border-radius:var(--radius-option);padding:var(--inset-control);display:flex;flex-direction:column;gap:var(--gap-stack)}
+.tune .ans{margin:var(--gap-tight) calc(var(--gap-stack) * -1) 0}
+.tune .hint{font-size:12px;color:var(--text-secondary);margin:0}
+.kit{border:1px solid var(--border-subtle);border-radius:var(--radius-option);padding:var(--gap-tight) 0}
+.kit-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:var(--gap-controls);align-items:center;width:100%;border:0;background:none;padding:6px 12px;text-align:left;color:var(--text-primary)}
+.kit-row .th{width:40px;height:40px}
+.kit-row .th>svg,.kit-row .th>img{width:100%;height:100%;object-fit:contain;display:block}
+.kit-row b{display:block;font-size:14px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kit-row small{display:block;font-size:12px;color:var(--text-secondary)}
+.kit-row .pz{font-size:14px;font-variant-numeric:tabular-nums}
+.kit-tot{display:flex;justify-content:space-between;margin:var(--gap-tight) 12px 0;padding:10px 0 6px;border-top:1px solid var(--border-subtle);font-size:14px}
+.row-acts{display:flex;flex-wrap:wrap;gap:var(--gap-stack)}
+.soft{border:0;background:var(--surface-control);border-radius:var(--radius-control);height:36px;padding:0 14px;font-size:14px;color:var(--text-primary)}
+.soft.dark{background:var(--action-primary);color:var(--text-on-action)}
+.side-f{flex:none;display:flex;flex-direction:column;gap:var(--gap-stack);padding:var(--gap-stack) var(--inset-control) calc(var(--inset-control) + env(safe-area-inset-bottom,0px))}
+.sugg{display:flex;flex-wrap:wrap;gap:var(--gap-stack)}
+.chat{display:flex;align-items:center;gap:var(--gap-stack);height:52px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);padding:0 var(--gap-stack) 0 20px}
+.chat input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--text-primary);outline:none}
+.chat input::placeholder{color:var(--text-secondary)}
+.send{border:0;width:36px;height:36px;border-radius:50%;background:var(--action-primary);color:var(--text-on-action);display:grid;place-items:center}
 
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
@@ -171,35 +221,15 @@ dl.specs dd{text-align:right}
 
 /* ---------- phone ---------- */
 @media (max-width:760px){
-  .top{grid-template-columns:auto 1fr auto;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
-  .logo{font-size:12.5px;letter-spacing:-.02em}
-  .top{gap:6px}
-  .tabs{justify-self:center}
-  .tabs button{width:clamp(30px,8.6vw,46px);height:40px}
-  .tabs svg{width:21px;height:21px}
-  .right .dark-pill,.right #searchBtn,.right .review{display:none}
-  .circle{width:44px;height:44px}
-  .card{left:0;right:0;transform:none;bottom:0;width:auto;border-radius:var(--radius-surface) var(--radius-surface) 0 0;box-shadow:var(--shadow-raised);
-    padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-  .q{font-size:24px;margin:2px 0 14px}
-  .qsub{margin:-8px 0 14px}
-  .opts{overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px;scroll-snap-type:x mandatory}
-  .opts::-webkit-scrollbar{display:none}
-  .opt{flex:0 0 calc((100% - 24px)/3.1);scroll-snap-align:start;padding:16px 8px}
-  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;background:var(--surface-raised);border-top:1px solid var(--border-subtle);
-    padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-  .stack{border:0;background:none;width:64px;height:48px;position:relative;padding:0}
-  .stack .t{position:absolute;bottom:0;width:40px;height:40px;border-radius:9px;background:var(--surface-control);box-shadow:var(--shadow-control);padding:3px}
-  .stack .t>svg,.stack .t>img{width:100%;height:100%;object-fit:contain}
-  .stack .none{position:absolute;inset:4px 18px 4px 0;border:1.5px dashed var(--border-subtle);border-radius:9px}
-  .bar .soft-pill{height:48px;padding:0 26px}
-  .bar .circle{box-shadow:none;background:var(--surface-control)}
+  :root{--gutter-page-wide:var(--gutter-page-compact)}
+  .app,.app.closed{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;inset:0;z-index:15;border:0}
+  .app.closed .side{display:none}
+  .cat-t{font-size:28px}
+  .foot{padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
   .modal{max-width:none;border-radius:var(--radius-surface) var(--radius-surface) 0 0;max-height:92vh;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
   .scrim{align-items:flex-end;padding:0}
   .grab{display:block;width:38px;height:5px;border-radius:3px;background:var(--surface-sunken);margin:0 auto 6px}
-  .bgrid{grid-template-columns:repeat(2,1fr);gap:20px 12px}
-  .stage{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px var(--gutter-page-compact);padding-left:max(var(--gutter-page-compact),env(safe-area-inset-left,0px));padding-right:max(var(--gutter-page-compact),env(safe-area-inset-right,0px))}
-  .p .nm{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 b,strong{font-weight:400}
@@ -208,29 +238,29 @@ b,strong{font-weight:400}
 </style>
 </head>
 <body>
-<header class="top">
-  <a class="logo" href="#grinders" aria-label="catalog.cafe home">catalog.cafe</a>
-  <div class="tabs" role="tablist" aria-label="Product type" id="tabs"></div>
-  <div class="right">
-    <button class="review" id="reviewBtn" hidden></button>
-    <button class="dark-pill" id="browseBtn">Browse all</button>
-    <button class="circle" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
-    <button class="circle" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg></button>
+<div class="app" id="app">
+  <div class="pane">
+    <header class="hdr">
+      <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
+      <button class="review" id="reviewBtn" hidden></button>
+      <button class="icon-btn" id="searchBtn" aria-label="Search"></button>
+      <button class="cta" id="openSide">Create a setup</button>
+    </header>
+    <main class="main" id="main" aria-live="polite"></main>
+    <footer class="foot">
+      <nav><button id="aboutBtn">About and affiliate disclosure</button><button id="signBtn">Sign in</button></nav>
+      <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a>’ Bean Base</span>
+    </footer>
   </div>
-</header>
-
-<main class="stage" id="stage" aria-label="Products"></main>
-
-<section class="card" id="card" aria-live="polite">
-  <div class="card-top"><button class="ghost" id="back">← Back</button><span id="step"></span><button class="ghost" id="reset">Start over</button></div>
-  <div id="qwrap"></div>
-</section>
-
-<nav class="bar" aria-label="Toolbar">
-  <button class="stack" id="stack" aria-label="My setup"></button>
-  <button class="soft-pill" id="browseBtn2">Browse all</button>
-  <button class="circle" id="searchBtn2" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
-</nav>
+  <aside class="side" id="side" aria-label="Create a setup">
+    <div class="side-h"><h2>Create a setup</h2><button class="icon-btn flat" id="closeSide" aria-label="Close the setup assistant"></button></div>
+    <div class="thread" id="thread"></div>
+    <div class="side-f">
+      <div class="sugg" id="sugg"></div>
+      <form class="chat" id="chat"><input id="chatIn" type="text" placeholder="Ask anything, or tell me what you need…" aria-label="Ask the setup assistant" autocomplete="off"><button class="send" aria-label="Send"></button></form>
+    </div>
+  </aside>
+</div>
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/config.js"></script>
@@ -263,57 +293,49 @@ function money(usd){
 function nice(usd){const v=usd*(FX[cur()]||1), st=v>=100?10:5;return Math.round(v/st)*st/(FX[cur()]||1)}
 const under=n=>()=>`Under ${money(nice(n))}`, span=(a,b)=>()=>`${money(nice(a))}–${money(nice(b))}`, over=n=>()=>`${money(nice(n))}+`;
 const B=(lo,hi)=>g=>g.price>=lo&&g.price<hi;
-const TABS=[
- {key:'grinders',cat:'grinder',label:'Grinders',qs:[
-   {id:'for',q:'What are you grinding for?',o:[['espresso','Espresso','Fine, even grounds',g=>g.does.includes('espresso')],['filter','Filter','Pour-over, drip, press',g=>g.does.includes('filter')],['both','Both','One grinder for all',g=>g.does.length===2]]},
-   {id:'power',q:'Hand crank or electric?',o:[['hand','Hand crank','Quiet and portable',g=>g.kind==='hand'],['electric','Electric','Push a button',g=>g.kind!=='hand']]},
-   {id:'budget',q:"What's your budget?",o:[['lo',under(150),'Get started',B(0,150)],['mid',span(150,400),'The sweet spot',B(150,400)],['hi',over(400),'Buy once',B(400,1e9)]]}
- ]},
- {key:'espresso',cat:'espresso',label:'Espresso machines',qs:[
-   {id:'style',q:'How do you want to pull shots?',o:[['lever','By hand','Lever, no electronics',g=>g.effort===3],['semi','Semi-automatic','You start and stop it',g=>g.effort===2],['auto','Guided','Built-in grinder or auto milk',g=>g.effort===1]]},
-   {id:'milk',q:'Do you make milk drinks?',o:[['yes','Yes','Lattes, flat whites',g=>g.milk],['no','Rarely','Mostly straight shots',g=>true]]},
-   {id:'budget',q:"What's your budget?",o:[['lo',under(600),'',B(0,600)],['mid',span(600,1500),'',B(600,1500)],['hi',over(1500),'',B(1500,1e9)]]},
-   {id:'space',q:'How much counter space?',o:[['tight','Tight','Under 20 cm wide',g=>g.w===1],['normal','Normal','',g=>g.w<=2],['roomy','Roomy','Anything fits',g=>true]]}
- ]},
- {key:'beans',cat:'bean',label:'Beans',qs:[
-   {id:'for',q:'What are you brewing?',o:[['espresso','Espresso','Shots and milk drinks',g=>g.for!=='filter'],['filter','Filter','Pour-over, drip, press',g=>g.for!=='espresso']]},
-   {id:'roast',q:'How dark do you like it?',o:[['light','Light','Bright, fruity, tea-like',g=>g.roast==='light'],['medium','Medium','Sweet and balanced',g=>g.roast==='medium'],['dark','Dark','Bold, roasty, low acid',g=>g.roast==='dark']]},
-   {id:'flavor',q:'Which flavours pull you in?',o:[['fruity','Fruity & floral','Berries, citrus, jasmine',g=>g.flavor==='fruity'],['choc','Chocolate & nutty','Cocoa, caramel, hazelnut',g=>g.flavor==='choc'],['sweet','Sweet & classic','Brown sugar, toffee',g=>g.flavor==='sweet']]},
-   {id:'budget',q:'Price per bag?',o:[['lo',under(18),'',B(0,18)],['mid',span(18,26),'',B(18,26)],['hi',over(26),'',B(26,1e9)]]}
- ]},
- {key:'brewers',cat:'brewer',label:'Brewers',qs:[
-   {id:'taste',q:'What kind of cup do you like?',o:[['clean','Clean & bright','Tea-like, layered',g=>g.taste==='clean'],['rich','Rich & full','Heavier body',g=>g.taste==='rich'],['strong','Strong & short','Small, intense',g=>g.taste==='strong'],['auto','Hands-off','A machine does it',g=>g.taste==='auto']]},
-   {id:'cups',q:'How many cups at once?',o:[['1','Just me','1 cup',g=>true],['2','2–4','For a couple',g=>g.cap>=3],['6','A crowd','6 or more',g=>g.cap>=6]]},
-   {id:'budget',q:"What's your budget?",o:[['lo',under(40),'',B(0,40)],['mid',span(40,100),'',B(40,100)],['hi',over(100),'',B(100,1e9)]]}
- ]},
- {key:'kettles',cat:'kettle',label:'Kettles',qs:[
-   {id:'heat',q:'How will you heat it?',o:[['electric','Electric','Plugs into a base',g=>g.electric],['stove','Stovetop','Gas, electric or induction',g=>!g.electric]]},
-   {id:'temp',q:'Do you want to set the temperature?',o:[['yes','Yes','Dial in exact degrees',g=>g.temp],['no','No','Boiling is fine',g=>true]]},
-   {id:'budget',q:"What's your budget?",o:[['lo',under(80),'',B(0,80)],['hi',over(80),'',B(80,1e9)]]}
- ]},
- {key:'scales',cat:'scale',label:'Scales',qs:[
-   {id:'use',q:'What are you weighing for?',o:[['espresso','Espresso','Fits on a drip tray',g=>g.use!=='pourover'],['pourover','Pour-over','Room for a server',g=>g.use!=='espresso']]},
-   {id:'extras',q:'What should it do?',o:[['basic','Just weigh','0.1 g is enough',g=>true],['timer','Weigh and time','Built-in timer',g=>g.timer],['app','Track the brew','App and flow rate',g=>g.app]]},
-   {id:'budget',q:"What's your budget?",o:[['lo',under(70),'',B(0,70)],['hi',over(70),'',B(70,1e9)]]}
- ]}
+/* ---------- icons (rounded outline, 24 px grid) ---------- */
+const ICONS={
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/>',
+  x:'<path d="M7 7l10 10M17 7 7 17"/>',
+  send:'<path d="M12 18.5v-13M6.5 11 12 5.5l5.5 5.5"/>',
+  right:'<path d="m9.5 6.5 5.5 5.5-5.5 5.5"/>',
+  sideClose:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M14.5 4.5v15"/><path d="m8 9.5 2.5 2.5L8 14.5"/>',
+  check:'<path d="m6 12.5 4 4 8-9"/>'
+};
+const ico=k=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
+
+/* ---------- product types and their filters ----------
+   Filters inside a group are alternatives (Hand or Electric); groups combine (Electric and Espresso). */
+const CATS=[
+ {key:'espresso',label:'Espresso machines',short:'machines',cats:['espresso'],groups:[
+   [['lever','Lever',g=>g.effort===3],['semi','Semi-automatic',g=>g.effort===2],['guided','Guided',g=>g.effort===1]],
+   [['milk','Steam wand',g=>!!g.milk]],[['grinder','Built-in grinder',g=>!!g.builtIn]],[['compact','Compact',g=>g.w===1]]]},
+ {key:'grinders',label:'Grinders',short:'grinders',cats:['grinder'],groups:[
+   [['hand','Hand',g=>g.kind==='hand'],['electric','Electric',g=>g.kind!=='hand']],
+   [['espresso','Espresso',g=>(g.does||[]).includes('espresso')],['filter','Filter',g=>(g.does||[]).includes('filter')]],
+   [['single','Single dose',g=>g.kind!=='hand'&&g.kind!=='hopper'],['hopper','Hopper',g=>g.kind==='hopper']]]},
+ {key:'brewers',label:'Brewers',short:'brewers',cats:['brewer'],groups:[
+   [['pourover','Pour-over',g=>['cone','chemex'].includes(g.kind)],['immersion','Immersion',g=>['steep','aeropress'].includes(g.kind)],
+    ['press','French press',g=>g.kind==='press'],['moka','Moka pot',g=>g.kind==='moka'],['machine','Drip machine',g=>!['cone','chemex','steep','aeropress','press','moka'].includes(g.kind)]]]},
+ {key:'kettles',label:'Kettles and scales',short:'kettles and scales',cats:['kettle','scale'],groups:[
+   [['kettle','Kettles',g=>g.cat==='kettle'],['scale','Scales',g=>g.cat==='scale']],
+   [['electric','Electric',g=>g.cat==='kettle'&&!!g.electric],['stove','Stovetop',g=>g.cat==='kettle'&&!g.electric]],
+   [['timer','With timer',g=>g.cat==='scale'&&!!g.timer]]]},
+ {key:'beans',label:'Beans',short:'beans',cats:['bean'],groups:[
+   [['light','Light roast',g=>g.roast==='light'],['medium','Medium roast',g=>g.roast==='medium'],['dark','Dark roast',g=>g.roast==='dark']],
+   [['forEsp','For espresso',g=>g.for!=='filter'],['forFil','For filter',g=>g.for!=='espresso']],
+   [['fruity','Fruity',g=>g.flavor==='fruity'],['choc','Chocolatey',g=>g.flavor==='choc'],['sweet','Sweet',g=>g.flavor==='sweet']]]}
 ];
+const catOf=it=>CATS.find(c=>c.cats.includes(it.cat))||CATS[0];
 
 /* ---------- state ---------- */
-let S={tab:'grinders',answers:{},setup:[],cur:'USD'};
-try{const s=JSON.parse(localStorage.getItem('bf2')||'null');if(s)S=Object.assign(S,s)}catch(e){}
-TABS.forEach(t=>{S.answers[t.key]=S.answers[t.key]||{}});
-if(/^#(grinders|espresso|beans|brewers|kettles|scales)$/.test(location.hash))S.tab=location.hash.slice(1);
-const save=()=>{try{localStorage.setItem('bf2',JSON.stringify(S))}catch(e){}};
-const tab=()=>TABS.find(t=>t.key===S.tab);
+let S={view:'home',filters:{},setup:[],cur:'USD',side:true,chat:{}};
+try{const old=JSON.parse(localStorage.getItem('bf2')||'null');if(old){S.setup=old.setup||[];S.cur=old.cur||'USD'}}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('cc3')||'null');if(s)S=Object.assign(S,s)}catch(e){}
+const save=()=>{try{localStorage.setItem('cc3',JSON.stringify(S))}catch(e){}};
 const byId=id=>GEAR.find(g=>g.id===id);
-
-function matches(t,answers){
-  return GEAR.filter(g=>g.cat===t.cat&&t.qs.every(q=>{
-    const a=answers[q.id]; if(!a||a==='any')return true;
-    return q.o.find(o=>o[0]===a)[3](g);
-  })).sort((a,b)=>a.pop-b.pop);
-}
-const stepOf=t=>t.qs.findIndex(q=>!S.answers[t.key][q.id]);
+const phoneMQ=matchMedia('(max-width:760px)');
+let LOG=[];   // free-text exchanges with the assistant, this visit only
 
 /* ---------- product renders (procedural SVG, transparent background) ---------- */
 let uid=0;
@@ -495,187 +517,258 @@ function pic(it){
 }
 const byPop=(a,b)=>(a.pop||99)-(b.pop||99);
 
-/* ---------- tabs ---------- */
-const tabsEl=document.getElementById('tabs');
-tabsEl.innerHTML=TABS.map(t=>`<button role="tab" id="tab-${t.key}" aria-label="${t.label}" title="${t.label}"><svg viewBox="0 0 24 24">${ICON[t.key]}</svg></button>`).join('');
-tabsEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.id.slice(4);if(k!==S.tab)location.hash=k});
-window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(k==='owner'){openSignIn();return}if(TABS.some(t=>t.key===k)&&k!==S.tab){S.tab=k;save();closeModal();renderAll(true)}});
+/* ---------- routing: #grinders opens a category, anything else is home ---------- */
+const app=document.getElementById('app'), main=document.getElementById('main');
+function route(){
+  const h=location.hash.slice(1);
+  if(h==='owner'){openSignIn();return}
+  if(h==='scales'){S.filters.kettles=['scale'];history.replaceState(null,'','#kettles');S.view='kettles'}
+  else S.view=CATS.some(c=>c.key===h)?h:'home';
+  save();closeModal();renderMain(true);
+}
+addEventListener('hashchange',route);
+function go(key,filters){
+  if(filters)S.filters[key]=filters;
+  if(location.hash==='#'+key){save();renderMain(true)}else location.hash=key;
+}
 
-/* ---------- product grid ---------- */
-const stage=document.getElementById('stage'), cardEl=document.getElementById('card');
-const phoneMQ=matchMedia('(max-width:760px)');
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let nodes=new Map(), shownTab=null, shownKey='', limit=0;
+/* ---------- browsing pane ---------- */
+const items=c=>GEAR.filter(g=>c.cats.includes(g.cat)).sort(byPop);
+function filtered(c,sel){
+  if(!sel||!sel.length)return items(c);
+  return items(c).filter(g=>c.groups.every(gr=>{const on=gr.filter(o=>sel.includes(o[0]));return !on.length||on.some(o=>o[2](g))}));
+}
+const loadingMsg=()=>LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.':LOAD==='loading'?'Loading the catalog…':'Nothing here yet.';
+let limit=0, list=[];
 const PAGE=60;
-
-function makeEl(it){
-  const b=document.createElement('button');
-  b.className='p';b.dataset.id=it.id;b.setAttribute('aria-label',`${it.name}, about ${money(it.price||0)}`);
-  b.innerHTML=`<span class="img">${pic(it)}</span><span class="nm">${esc(it.name)}</span>`;
-  b.addEventListener('click',()=>openProduct(it.id));
-  return b;
+function renderMain(fresh){
+  if(S.view==='home')renderHome();else renderCat(CATS.find(c=>c.key===S.view),fresh);
+  if(fresh)main.scrollTop=0;
 }
-function layout(fresh){
-  const t=tab(), cat=GEAR.filter(x=>x.cat===t.cat).sort(byPop), list=matches(t,S.answers[t.key]);
-  const rebuild=fresh||shownTab!==t.key;
-  const key=t.key+JSON.stringify(S.answers[t.key]);
-  if(rebuild||key!==shownKey){limit=PAGE;shownKey=key;if(!rebuild)stage.scrollTop=0}
-  if(rebuild){stage.innerHTML='';nodes=new Map();shownTab=t.key;stage.scrollTop=0}
-  // only the first `limit` matches are drawn; scrolling near the end draws more
-  more=list.length>limit;
-  const keep=new Set(list.slice(0,limit).map(x=>x.id));
-  const all=cat.length>PAGE?cat.filter(x=>keep.has(x.id)||nodes.has(x.id)):cat;
-  stage.querySelectorAll('.empty').forEach(e=>e.remove());
-  const first=new Map();
-  nodes.forEach((n,id)=>{if(!n.hidden)first.set(id,n.getBoundingClientRect())});
-  // keep nodes in step with the catalog, in popularity order
-  const ids=new Set(all.map(x=>x.id));
-  nodes.forEach((n,id)=>{if(!ids.has(id)){n.remove();nodes.delete(id)}});
-  const entering=[];
-  all.forEach(it=>{
-    let n=nodes.get(it.id);
-    if(!n){n=makeEl(it);nodes.set(it.id,n);n.hidden=!keep.has(it.id);if(!n.hidden)entering.push(n)}
-    else{n.querySelector('.img').innerHTML=pic(it);n.querySelector('.nm').textContent=it.name}
-    stage.appendChild(n);
+function renderHome(){
+  main.innerHTML=CATS.map(c=>`<section class="sec" data-go="${c.key}" aria-labelledby="t-${c.key}">
+    <div class="sec-h"><h2 class="sec-t" id="t-${c.key}">${c.label}</h2><a class="va" href="#${c.key}">View all ${c.short} ${ico('right')}</a></div>
+    <div class="thumbs" data-thumbs="${c.key}"></div></section>`).join('');
+  fillThumbs();
+}
+function cols(){
+  const w=main.clientWidth-parseFloat(getComputedStyle(main).paddingLeft)*2-32;
+  return Math.max(3,Math.min(20,Math.floor((w+8)/68)));
+}
+function fillThumbs(){
+  if(S.view!=='home')return;
+  const n=cols(), max=n*5;
+  CATS.forEach(c=>{
+    const el=main.querySelector(`[data-thumbs="${c.key}"]`);if(!el)return;
+    el.style.setProperty('--cols',n);
+    const all=items(c);
+    if(!all.length){el.outerHTML=`<p class="ms" data-thumbs="${c.key}">${loadingMsg()}</p>`;return}
+    const show=all.length>max?all.slice(0,max-1):all;
+    el.innerHTML=show.map(it=>`<button class="tb" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
+      +(all.length>max?`<a class="tb more" href="#${c.key}" aria-label="View all ${all.length.toLocaleString('en-US')} ${c.short}">${(all.length-show.length).toLocaleString('en-US')}<span>more</span></a>`:'');
   });
-  // dissolve the ones that no longer match, bring back the ones that do
-  nodes.forEach((n,id)=>{
-    const show=keep.has(id);
-    if(!show&&!n.hidden){
-      const r=first.get(id);
-      if(r&&!reduce){
-        const g=n.cloneNode(true);
-        Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',margin:0,pointerEvents:'none',zIndex:1});
-        document.body.appendChild(g);
-        g.animate([{opacity:1,filter:'blur(0)',transform:'scale(1)'},{opacity:0,filter:'blur(12px)',transform:'scale(.9)'}],{duration:380,easing:'ease-out'}).onfinish=()=>g.remove();
-      }
-      n.hidden=true;
-    }else if(show&&n.hidden){n.hidden=false;entering.push(n)}
-  });
-  if(!keep.size){
-    const msg=LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.'
-      :LOAD==='loading'?'Loading the catalog…'
-      :!cat.length?(t.cat==='bean'?'No beans in the catalog yet.':'Nothing in this category yet.')
-      :'Nothing matches every answer. Go back a step or choose “No preference”.';
-    stage.insertAdjacentHTML('beforeend',`<div class="empty">${msg}</div>`);
-  }
-  if(reduce)return;
-  // the rest glide to their new cells
-  nodes.forEach((n,id)=>{
-    if(n.hidden)return;
-    const f=first.get(id);
-    if(f&&!entering.includes(n)){
-      const l=n.getBoundingClientRect(), dx=f.left-l.left, dy=f.top-l.top;
-      if(Math.abs(dx)>1||Math.abs(dy)>1)n.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:520,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
-    }
-  });
-  entering.forEach((n,i)=>n.animate([{opacity:0,filter:'blur(8px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:rebuild?Math.min(i,17)*30:180,easing:'ease-out',fill:'backwards'}));
 }
-const renderField=layout;
-let more=false, ticking=false;
-stage.addEventListener('scroll',()=>{
-  if(!more||ticking)return;
-  if(stage.scrollTop+stage.clientHeight>stage.scrollHeight-stage.clientHeight*1.5){
-    ticking=true;limit+=PAGE;
-    requestAnimationFrame(()=>{layout(false);ticking=false});
-  }
-},{passive:true});
-// keep the first and last rows clear of the fixed header and question card
-function pad(){
-  stage.style.paddingTop=(document.querySelector('.top').getBoundingClientRect().bottom+16)+'px';
-  stage.style.paddingBottom=(innerHeight-cardEl.getBoundingClientRect().top+32)+'px';
+function chipsHtml(c,sel){
+  const opts=c.groups.flat(), on=opts.filter(o=>sel.includes(o[0])), off=opts.filter(o=>!sel.includes(o[0]));
+  const chip=(id,label,p)=>`<button class="chip" data-chip="${id}" aria-pressed="${p}">${label}${p&&id!=='popular'?ico('x'):''}</button>`;
+  return (sel.length?'':chip('popular','Popular',true))+on.map(o=>chip(o[0],o[1],true)).join('')+(sel.length?chip('popular','Popular',false):'')+off.map(o=>chip(o[0],o[1],false)).join('');
 }
-new ResizeObserver(pad).observe(cardEl);
-addEventListener('resize',pad);
-phoneMQ.addEventListener('change',()=>{renderSheet();pad()});
-
-
-/* ---------- question card ---------- */
-const qwrap=document.getElementById('qwrap');
-function label(o){return typeof o[1]==='function'?o[1]():o[1]}
-function renderSheet(){
-  const t=tab(), ans=S.answers[t.key], step=stepOf(t), n=matches(t,ans).length, any=Object.keys(ans).length>0;
-  document.getElementById('back').disabled=!any;
-  document.getElementById('reset').disabled=!any;
-  document.getElementById('step').textContent=LOAD==='ready'||LOAD==='stale'?`${n} ${n===1?'match':'matches'}`:'';
-  if(step<0){
-    qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${n?'Here’s your shortlist':'No exact match'}</h2>
-      <p class="qsub">${n?'Tap a product for specs and where to buy it.':'Go back a step, or start over.'}</p>
-      <div class="done-acts">${n?`<button class="soft-pill" data-act="browse">See all ${n}</button>`:''}<button class="soft-pill" data-act="reset">Start over</button></div></div>`;
-    return;
-  }
-  const q=t.qs[step];
-  qwrap.innerHTML=`<div class="anim-in"><h2 class="q">${q.q}</h2><div class="opts">${q.o.map(o=>{
-      const c=matches(t,{...ans,[q.id]:o[0]}).length;
-      return `<button class="opt" data-q="${q.id}" data-v="${o[0]}" ${c?'':'disabled'}><b>${label(o)}</b>${o[2]?`<span>${o[2]}</span>`:''}</button>`}).join('')}
-    <button class="opt" data-q="${q.id}" data-v="any"><b>No preference</b></button></div></div>`;
+function renderCat(c,fresh){
+  const sel=S.filters[c.key]||[];
+  list=filtered(c,sel);
+  if(fresh||!main.querySelector('#pgrid'))limit=PAGE;
+  main.innerHTML=`<div class="cat-h"><a class="backl" href="#">← All products</a>
+    <div class="cat-row"><h1 class="cat-t">${c.label}</h1><div class="chips" role="group" aria-label="Filter ${c.label.toLowerCase()}">${chipsHtml(c,sel)}</div></div>
+    ${LOAD==='ready'||LOAD==='stale'?`<p class="count">${list.length.toLocaleString('en-US')} ${list.length===1?'product':'products'}</p>`:''}</div>
+    <div class="pgrid" id="pgrid"></div>`;
+  drawGrid();
 }
-qwrap.addEventListener('click',e=>{
-  const a=e.target.closest('[data-act]');
-  if(a){a.dataset.act==='browse'?openBrowse(true):resetTab();return}
-  const b=e.target.closest('.opt');if(!b||b.disabled)return;
-  S.answers[S.tab][b.dataset.q]=b.dataset.v;save();layout(false);renderSheet();
+function drawGrid(){
+  const g=main.querySelector('#pgrid');if(!g)return;
+  g.innerHTML=list.length?list.slice(0,limit).map(it=>`<button class="p" data-open="${esc(it.id)}"><span class="img">${pic(it)}</span><span class="nm">${esc(it.name)}</span></button>`).join('')
+    :`<p class="empty">${LOAD==='ready'||LOAD==='stale'?'Nothing matches all of these filters. Remove one to see more.':loadingMsg()}</p>`;
+}
+main.addEventListener('click',e=>{
+  const o=e.target.closest('[data-open]');if(o){openProduct(o.dataset.open);return}
+  const ch=e.target.closest('[data-chip]');
+  if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
+    sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
+    S.filters[c.key]=sel;save();renderCat(c,true);main.querySelector(`[data-chip="${id}"]`)?.focus();return}
+  if(e.target.closest('a'))return;
+  const s=e.target.closest('[data-go]');if(s)go(s.dataset.go);
 });
-function resetTab(){S.answers[S.tab]={};save();layout(false);renderSheet()}
-document.getElementById('reset').onclick=resetTab;
-document.getElementById('back').onclick=()=>{const t=tab(),ans=S.answers[t.key];const last=[...t.qs].reverse().find(q=>ans[q.id]);if(!last)return;delete ans[last.id];save();layout(false);renderSheet()};
+main.addEventListener('scroll',()=>{
+  if(S.view==='home'||limit>=list.length)return;
+  if(main.scrollTop+main.clientHeight>main.scrollHeight-main.clientHeight){limit+=PAGE;drawGrid()}
+},{passive:true});
+new ResizeObserver(()=>fillThumbs()).observe(main);
 
-/* ---------- browse all, search, menu ---------- */
-function openBrowse(onlyMatches){
-  const t=tab(), all=GEAR.filter(x=>x.cat===t.cat).sort(byPop), m=new Set(matches(t,S.answers[t.key]).map(x=>x.id));
-  const anyAns=Object.keys(S.answers[t.key]).length>0;
-  const showAll=!onlyMatches||!anyAns;
-  const items=showAll?all:all.filter(x=>m.has(x.id));
-  openModal(`<h2 class="mt">${t.label}</h2>
-    ${anyAns?`<div class="seg"><button data-seg="m" aria-pressed="${!showAll}">Your matches (${m.size})</button><button data-seg="a" aria-pressed="${showAll}">All (${all.length})</button></div>`:`<p class="ms">${all.length} products</p>`}
-    <div class="bgrid">${items.map(it=>`<button class="bitem ${showAll&&anyAns&&!m.has(it.id)?'dim':''}" data-open="${esc(it.id)}"><span class="bimg">${pic(it)}</span><span class="nm">${esc(it.name)}</span><span class="pr">${money(it.price||0)}</span></button>`).join('')||'<p class="ms">Nothing here yet.</p>'}</div>`,'wide');
-  layer.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>openBrowse(b.dataset.seg==='m'));
-  layer.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openProduct(b.dataset.open));
+/* ---------- setup assistant: follows the conversation tree ---------- */
+const STEPS={
+  drinks:{q:'What do you like to drink?',sub:'Pick all that apply',multi:true,
+    o:[['espresso','Espresso'],['milk','Lattes & cappuccinos'],['americano','Americano'],['filter','Pour-over or drip']]},
+  hands:{q:'How hands-on do you want to be?',o:[['lever','Manual lever','Pull every shot by hand'],['semi','Semi-automatic','You start and stop the shot'],['guided','Let the machine help','Built-in grinder or automatic milk']]},
+  brew:{q:'How do you like to brew?',o:[['pourover','Pour-over'],['immersion','Immersion, like an AeroPress'],['press','French press'],['machine','Drip machine']]},
+  kit:{q:'Do you have a gooseneck kettle and a scale?',o:[['have','Yes, both'],['add','Add them to my setup']]},
+  grinder:{q:'Do you already have a grinder?',o:[['yes','Yes'],['no','No, help me pick one']]},
+  gtype:{tune:'Fine-tune grinders',q:'What kind of grinder?',hint:'Your choice adds a filter to the grinders on the left.',
+    o:[['single','Single dose','Weigh beans for each shot'],['hopper','Hopper','Fill it up, grind on demand'],['hand','Hand grinder','Quiet and portable'],['any','Not sure','Show me all of them']]},
+  budget:{q:'What do you want to spend in total?',o:[['lo',()=>`Under ${money(nice(300))}`],['mid',()=>`${money(nice(300))} to ${money(nice(800))}`],['hi',()=>`${money(nice(800))} and up`],['any','Show me everything']]}
+};
+const A=()=>S.chat;
+const wantsEsp=a=>a.easy||(a.drinks||[]).some(d=>d!=='filter');
+const wantsFil=a=>!a.easy&&(a.drinks||[]).includes('filter');
+function order(a){
+  const s=['drinks'];if(!a.drinks&&!a.easy)return s;
+  if(wantsEsp(a)&&!a.easy)s.push('hands');
+  if(wantsFil(a)){s.push('brew');if(a.brew&&a.brew!=='machine')s.push('kit')}
+  if(!a.easy){s.push('grinder');if(a.grinder==='no')s.push('gtype')}
+  s.push('budget');return s;
 }
+const optLabel=o=>typeof o[1]==='function'?o[1]():o[1];
+function answerText(k,a){
+  if(k==='drinks')return a.easy?'Not sure, just make it easy':STEPS.drinks.o.filter(o=>a.drinks.includes(o[0])).map(o=>o[1]).join(', ');
+  const o=STEPS[k].o.find(x=>x[0]===a[k]);return o?optLabel(o):'';
+}
+let picks=new Set();   // drinks ticked but not yet confirmed
+function grinderFilters(a){
+  const f=[wantsEsp(a)?'espresso':'filter'];
+  if(a.gtype==='single')f.push('single');else if(a.gtype==='hopper')f.push('hopper');else if(a.gtype==='hand')f.push('hand');
+  return f;
+}
+function answer(k,v){
+  const a=A(), steps=order(a);
+  steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});
+  if(k==='drinks'&&v==='easy')a.easy=true;else a[k]=v;
+  // show the matching products on the left as the conversation goes
+  if(k==='hands')go('espresso',[v]);
+  else if(k==='brew')go('brewers',[v]);
+  else if(k==='kit'&&v==='add')go('kettles',[]);
+  else if(k==='grinder'&&v==='no')go('grinders',grinderFilters(a));
+  else if(k==='gtype')go('grinders',grinderFilters(a));
+  else if(k==='drinks'&&a.easy)go('espresso',['guided']);
+  save();renderSide();
+}
+function undoTo(k){const a=A(),steps=order(a);steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});picks=new Set();save();renderSide()}
+function startOver(){S.chat={};picks=new Set();LOG=[];save();renderSide()}
+
+// a suggested setup that fits the answers and the budget
+function suggest(a){
+  const cap={lo:300,mid:800,hi:1e9,any:1e9}[a.budget]||1e9;
+  const need=[];
+  const pool=(cat,f)=>GEAR.filter(g=>g.cat===cat&&f(g)).sort(byPop).slice(0,12);
+  if(wantsEsp(a)){const e=a.easy?g=>g.effort===1:CATS[0].groups[0].find(o=>o[0]===a.hands)?.[2]||(g=>true);
+    need.push(pool('espresso',g=>e(g)&&(!(a.drinks||[]).includes('milk')||g.milk)))}
+  if(wantsFil(a)){const b=CATS[2].groups[0].find(o=>o[0]===a.brew);need.push(pool('brewer',b?b[2]:g=>true))}
+  if(a.grinder==='no'){const f=grinderFilters(a), c=CATS[1];need.push(pool('grinder',g=>c.groups.every(gr=>{const on=gr.filter(o=>f.includes(o[0]));return !on.length||on.some(o=>o[2](g))})))}
+  if(a.kit==='add'){need.push(pool('kettle',g=>true));need.push(pool('scale',g=>g.use!=='espresso'))}
+  need.push(pool('bean',g=>wantsEsp(a)?g.for!=='filter':g.for!=='espresso'));
+  const lists=need.filter(l=>l.length), pick=lists.map(()=>0);
+  const total=()=>lists.reduce((s,l,i)=>s+(l[pick[i]].price||0),0);
+  for(let n=0;n<80&&total()>cap;n++){
+    // swap the priciest pick for a cheaper option in the same list
+    let best=-1,gain=0;
+    lists.forEach((l,i)=>{const cur=l[pick[i]].price||0;const j=l.findIndex(x=>(x.price||0)<cur);if(j>=0&&cur-(l[j].price||0)>gain){best=i;gain=cur-(l[j].price||0)}});
+    if(best<0)break;const l=lists[best], cur=l[pick[best]].price||0;pick[best]=l.findIndex(x=>(x.price||0)<cur);
+  }
+  return {items:lists.map((l,i)=>l[pick[i]]),fits:total()<=cap};
+}
+function kitHtml(list,showTotal=true){
+  const tot=list.reduce((s,it)=>s+(it.price||0),0);
+  return `<div class="kit">${list.map(it=>`<button class="kit-row" data-open="${esc(it.id)}"><span class="th">${pic(it)}</span><span><b>${esc(it.name)}</b><small>${({espresso:'Espresso machine',grinder:'Grinder',brewer:'Brewer',kettle:'Kettle',scale:'Scale',bean:'Beans'})[it.cat]||''}</small></span><span class="pz">${money(it.price||0)}</span></button>`).join('')}
+    ${showTotal?`<div class="kit-tot"><span>Total</span><span>${money(tot)}</span></div>`:''}</div>`;
+}
+const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
+function stepHtml(k,a){
+  const st=STEPS[k];
+  if(k==='drinks')return `<p class="qlab">Start</p><h3 class="qh">${st.q}</h3><p class="qs">${st.sub}</p>
+    <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}
+    <button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button><button data-ans="drinks" data-v="easy">Not sure, just make it easy</button></div>`;
+  const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
+  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh" style="font-size:20px">${st.q}</h3>${opts}<p class="hint">${st.hint}</p></div>`;
+  return `<h3 class="qh">${st.q}</h3>${opts}`;
+}
+function renderSide(){
+  const a=A(), steps=order(a);let h='';
+  for(const k of steps){
+    const done=k==='drinks'?(a.drinks||a.easy):a[k];
+    if(done){h+=`<p class="past">${STEPS[k].q}</p><button class="me" data-undo="${k}" title="Change this answer">${esc(answerText(k,a))}</button>`;continue}
+    if(LOAD==='loading'&&k!=='drinks'){h+='<p class="past">Loading the catalog…</p>';break}
+    h+=stepHtml(k,a);break;
+  }
+  if(steps.every(k=>k==='drinks'?(a.drinks||a.easy):a[k])){
+    const r=suggest(a);
+    h+=r.items.length?`<p class="bot">${r.fits?'Here’s a setup that fits:':'This is the closest I can get to that budget:'}</p>${kitHtml(r.items)}
+      <div class="row-acts"><button class="soft dark" data-save>Save to my setup</button><button class="soft" data-restart>Start over</button></div>`
+      :`<p class="bot">${loadingMsg()}</p>`;
+  }
+  h+=LOG.map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot">${m.html}</div>`).join('');
+  thread.innerHTML=h;
+  const n=S.setup.filter(byId).length;
+  sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
+  thread.scrollTop=thread.scrollHeight;
+}
+document.getElementById('side').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.pick){const v=t.dataset.pick;picks.has(v)?picks.delete(v):picks.add(v);renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
+  if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v)}return}
+  if(t.dataset.ans){answer(t.dataset.ans,t.dataset.v);return}
+  if(t.dataset.undo){undoTo(t.dataset.undo);return}
+  if(t.dataset.open){openProduct(t.dataset.open);return}
+  if('save' in t.dataset){const r=suggest(A());S.setup=[...new Set([...S.setup,...r.items.map(x=>x.id)])];save();toast('Saved to your setup');renderSide();return}
+  if('restart' in t.dataset){startOver();return}
+  if(t.dataset.cur){S.cur=t.dataset.cur;save();LOG.push({html:`Prices are now in ${esc(S.cur)}.`});renderMain(false);renderSide();return}
+  if(t.dataset.say){reply(t.dataset.say==='setup'?'What’s in my setup?':'Change currency');return}
+});
+function setupReply(){
+  const its=S.setup.map(byId).filter(Boolean);
+  return its.length?`You have ${its.length} thing${its.length>1?'s':''} saved:${kitHtml(its)}<p class="past" style="margin-top:8px">Prices in ${esc(cur())}.</p>`
+    :'Nothing saved yet. Finish the questions above, or open any product and choose “Add to my setup”.';
+}
+function reply(text){
+  const q=text.trim();if(!q)return;LOG.push({me:q});
+  const low=q.toLowerCase(), code=(low.match(/\b(usd|cad|eur|gbp|aud)\b/)||[])[1];
+  if(code&&FX[code.toUpperCase()]){S.cur=code.toUpperCase();save();renderMain(false);LOG.push({html:`Prices are now in ${S.cur}.`})}
+  else if(/currenc|price in|prices in/.test(low)){const cs=Object.keys(CURS).filter(c=>FX[c]);LOG.push({html:`Prices are in ${esc(cur())}. Pick another currency:<div class="row-acts" style="margin-top:8px">${cs.map(c=>`<button class="soft${c===cur()?' dark':''}" data-cur="${c}">${c}</button>`).join('')}</div>`})}
+  else if(/setup|saved|my kit/.test(low))LOG.push({html:setupReply()});
+  else{
+    const words=low.split(/\s+/).filter(w=>w.length>2);
+    const hits=GEAR.filter(it=>{const t=[it.name,it.brand,it.roaster,it.origin,sub(it)].join(' ').toLowerCase();return t.includes(low)||words.length&&words.every(w=>t.includes(w))}).sort(byPop).slice(0,4);
+    LOG.push({html:hits.length?`Here’s what I found in the catalog for “${esc(q)}”:${kitHtml(hits,false)}`:`I couldn’t find “${esc(q)}” in the catalog. Try a product name, brand or roaster.`});
+  }
+  renderSide();
+}
+document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('chatIn');reply(i.value);i.value=''});
+
+/* ---------- open and close the assistant ---------- */
+function setSide(open){S.side=open;save();app.classList.toggle('closed',!open);if(open)setTimeout(()=>thread.querySelector('button,[tabindex]')?.focus(),60);else document.getElementById('openSide').focus()}
+document.getElementById('openSide').onclick=()=>setSide(true);
+document.getElementById('closeSide').onclick=()=>setSide(false);
+document.getElementById('closeSide').innerHTML=ico('sideClose');
+document.getElementById('searchBtn').innerHTML=ico('search');
+document.querySelector('.send').innerHTML=ico('send');
+document.getElementById('searchBtn').onclick=openSearch;
+document.getElementById('aboutBtn').onclick=openAbout;
+document.getElementById('signBtn').onclick=async()=>{if(SESSION){await SB.auth.signOut();toast('Signed out')}else openSignIn()};
+function renderSign(){document.getElementById('signBtn').textContent=SESSION?'Sign out':'Sign in'}
+if(phoneMQ.matches)S.side=false;
+app.classList.toggle('closed',!S.side);
+
 function openSearch(){
-  openModal(`<input class="sinput" id="sq" type="search" placeholder="Search grinders, machines, beans…" aria-label="Search products" autocomplete="off"><div class="sres" id="sres"></div>`);
+  openModal(`<input class="sinput" id="sq" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><div class="sres" id="sres"></div>`);
   const inp=document.getElementById('sq'), out=document.getElementById('sres');
   const run=()=>{
     const q=inp.value.trim().toLowerCase();
-    if(!q){out.innerHTML=`<p class="ms" style="text-align:left;margin-top:14px">${GEAR.length} products across ${TABS.length} categories.</p>`;return}
+    if(!q){out.innerHTML=`<p class="ms" style="text-align:left;margin-top:14px">${GEAR.length.toLocaleString('en-US')} products across ${CATS.length} categories.</p>`;return}
     const hits=GEAR.filter(it=>[it.name,it.brand,it.roaster,it.origin,sub(it)].join(' ').toLowerCase().includes(q)).sort(byPop).slice(0,30);
-    out.innerHTML=hits.length?hits.map(it=>`<div class="setrow" role="button" tabindex="0" data-open="${esc(it.id)}"><div class="th">${pic(it)}</div><div style="min-width:0"><div class="nm2">${esc(it.name)}</div><div class="pp">${esc(TABS.find(x=>x.cat===it.cat).label)} · ${money(it.price||0)}</div></div><span></span></div>`).join('')
+    out.innerHTML=hits.length?hits.map(it=>`<div class="setrow" role="button" tabindex="0" data-open="${esc(it.id)}"><div class="th">${pic(it)}</div><div style="min-width:0"><div class="nm2">${esc(it.name)}</div><div class="pp">${esc(catOf(it).label)}</div></div><span></span></div>`).join('')
       :`<p class="ms" style="text-align:left;margin-top:14px">No products match “${esc(inp.value)}”.</p>`;
     out.querySelectorAll('[data-open]').forEach(r=>{r.onclick=()=>openProduct(r.dataset.open);r.onkeydown=e=>{if(e.key==='Enter')openProduct(r.dataset.open)}});
   };
   inp.addEventListener('input',run);run();setTimeout(()=>inp.focus(),50);
 }
-function openMenu(){
-  const curs=Object.keys(CURS).filter(c=>FX[c]);
-  openModal(`<h2 class="mt">Menu</h2><div class="mlist">
-    <button class="mrow" id="mSetup">My setup <span>${S.setup.length} item${S.setup.length===1?'':'s'}</span></button>
-    <button class="mrow" id="mBrowse">Browse all ${tab().label.toLowerCase()} <span>${GEAR.filter(x=>x.cat===tab().cat).length}</span></button>
-    ${isEditor?`<button class="mrow" id="mReview">Review queue <span>${PENDING.length} waiting</span></button>`:''}
-    <label class="mrow" for="mCur">Currency <select id="mCur">${curs.map(c=>`<option value="${c}" ${c===cur()?'selected':''}>${c} · ${CURS[c]}</option>`).join('')}</select></label>
-    <button class="mrow" id="mReset">Start over <span>${tab().label}</span></button>
-    <button class="mrow" id="mAbout">About and affiliate disclosure</button>
-    ${SESSION?`<button class="mrow" id="mOut">Sign out <span>${esc(SESSION.user.email||'')}</span></button>`:`<button class="mrow" id="mIn">Owner sign in</button>`}</div>`);
-  document.getElementById('mAbout').onclick=openAbout;
-  const mi=document.getElementById('mIn');if(mi)mi.onclick=openSignIn;
-  const mo=document.getElementById('mOut');if(mo)mo.onclick=async()=>{await SB.auth.signOut();closeModal();toast('Signed out')};
-  document.getElementById('mSetup').onclick=openSetup;
-  document.getElementById('mBrowse').onclick=()=>openBrowse(false);
-  const r=document.getElementById('mReview');if(r)r.onclick=openReview;
-  document.getElementById('mCur').onchange=e=>{S.cur=e.target.value;save();renderSheet();layout(false);toast(`Prices in ${S.cur}`)};
-  document.getElementById('mReset').onclick=()=>{resetTab();closeModal()};
-}
-document.getElementById('browseBtn').onclick=()=>openBrowse(true);
-document.getElementById('browseBtn2').onclick=()=>openBrowse(true);
-document.getElementById('searchBtn').onclick=openSearch;
-document.getElementById('searchBtn2').onclick=openSearch;
-document.getElementById('menuBtn').onclick=openMenu;
-/* ---------- my setup ---------- */
-function renderSetup(){
-  const items=S.setup.map(byId).filter(Boolean);
-  const st=document.getElementById('stack');
-  st.innerHTML=items.length?items.slice(-3).map((it,i)=>`<span class="t" style="left:${i*12}px;transform:rotate(${(i-1)*6}deg)">${pic(it)}</span>`).join(''):'<span class="none"></span>';
-}
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1600)}
+function renderSetup(){renderSide()}
 
 /* ---------- modals ---------- */
 const layer=document.getElementById('layer');
@@ -731,7 +824,6 @@ function openSetup(){
     <div class="tot">Total <span>${money(total)}</span></div>`:`<p class="note" style="text-align:center;margin-top:16px">Tap any product and choose “Add to my setup” to build a full kit here.</p>`}`);
   layer.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.setup=S.setup.filter(x=>x!==b.dataset.rm);save();renderSetup();openSetup()});
 }
-document.getElementById('stack').onclick=openSetup;
 
 /* ---------- boot ---------- */
 function renderCur(){}
@@ -770,7 +862,7 @@ async function loadCatalog(first){
   if(first)renderAll(true);else{layout(false);renderSheet();renderSetup()}
 }
 async function checkAdmin(){
-  isEditor=false;
+  isEditor=false;renderSign();
   if(SESSION){const {data}=await SB.rpc('is_admin');isEditor=data===true}
   if(isEditor)await loadPending();else{PENDING=[];updateReviewBtn()}
 }
@@ -840,12 +932,10 @@ function openReview(){
 }
 document.getElementById('reviewBtn').onclick=openReview;
 
-
-function renderAll(fresh){
-  TABS.forEach(t=>document.getElementById('tab-'+t.key).setAttribute('aria-selected',t.key===S.tab));
-  renderSheet();layout(fresh);renderSetup();
-}
-renderAll(true);boot();
+function renderAll(){renderMain(false);renderSide();renderSign()}
+function layout(){renderMain(false)}
+function renderSheet(){renderSide()}
+if(location.hash!=='#owner')route();renderSide();renderSign();boot();
 </script>
 </body>
 </html>
