@@ -15,7 +15,7 @@
   --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c;
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --icon-inactive:var(--grey-400);
-  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-sunken:var(--grey-200);
+  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-50); --surface-sunken:var(--grey-200);
   --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --overlay-scrim:rgba(17,17,17,.32);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-control:0 1px 4px rgba(17,17,17,.10);
 
@@ -27,7 +27,7 @@
 }
 :root[data-theme="dark"]{
   --text-primary:var(--grey-50); --text-secondary:var(--grey-400); --text-on-action:var(--grey-900); --text-on-accent:var(--grey-900); --icon-inactive:var(--grey-500);
-  --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-sunken:var(--grey-700);
+  --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-hover-subtle:var(--grey-800); --surface-sunken:var(--grey-700);
   --border-subtle:var(--grey-700); --action-primary:var(--grey-50); --accent:var(--bronze-300); --overlay-scrim:rgba(0,0,0,.55);
   --shadow-raised:0 12px 48px rgba(0,0,0,.45); --shadow-control:0 1px 4px rgba(0,0,0,.45); color-scheme:dark}
 
@@ -55,7 +55,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* home: one section per product type, a few rows of small thumbnails */
 .sec{display:block;padding:var(--inset-control);border-radius:var(--radius-section);cursor:pointer;transition:background .15s}
-@media (hover:hover){.sec:hover{background:var(--surface-control)}}
+@media (hover:hover){.sec:hover{background:var(--surface-hover-subtle)}}
 .sec-h{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);min-height:24px;margin-bottom:var(--gap-controls)}
 .sec-t{margin:0;font-size:17px;font-weight:400}
 .va{display:flex;align-items:center;gap:var(--gap-tight);font-size:13px;color:var(--text-primary);text-decoration:none;opacity:0;transition:opacity .15s}
