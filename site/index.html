@@ -11,23 +11,23 @@
    Each section shows a few rows of small thumbnails; a section opens a category page with filter pills. */
 /* Tokens mirror the catalog.cafe design system. Primitives first, then semantic roles. Components use semantic tokens only. */
 :root{
-  --grey-0:#ffffff; --grey-50:#f5f5f5; --grey-100:#f0f0f0; --grey-150:#e8e8e8; --grey-200:#e2e2e2; --grey-400:#a0a0a0; --grey-500:#6b6b6b;
-  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c;
+  --grey-0:#ffffff; --grey-25:#fafafa; --grey-50:#f5f5f5; --grey-100:#f0f0f0; --grey-150:#e8e8e8; --grey-200:#e2e2e2; --grey-400:#a0a0a0; --grey-500:#6b6b6b;
+  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-825:#212121; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c;
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --icon-inactive:var(--grey-400);
-  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-50); --surface-sunken:var(--grey-200);
+  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-25); --surface-sunken:var(--grey-200);
   --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --overlay-scrim:rgba(17,17,17,.32);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-control:0 1px 4px rgba(17,17,17,.10);
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
   --radius-control:999px; --radius-option:14px; --radius-surface:22px;
-  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px;
+  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px; --gap-section:24px;
   --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
   --text-primary:var(--grey-50); --text-secondary:var(--grey-400); --text-on-action:var(--grey-900); --text-on-accent:var(--grey-900); --icon-inactive:var(--grey-500);
-  --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-hover-subtle:var(--grey-800); --surface-sunken:var(--grey-700);
+  --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-hover-subtle:var(--grey-825); --surface-sunken:var(--grey-700);
   --border-subtle:var(--grey-700); --action-primary:var(--grey-50); --accent:var(--bronze-300); --overlay-scrim:rgba(0,0,0,.55);
   --shadow-raised:0 12px 48px rgba(0,0,0,.45); --shadow-control:0 1px 4px rgba(0,0,0,.45); color-scheme:dark}
 
@@ -49,19 +49,32 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (hover:hover){.icon-btn:hover{background:var(--surface-control-hover)}}
 .icon-btn.flat{background:none;color:var(--text-secondary)}
 .cta{border:0;background:var(--action-primary);color:var(--text-on-action);height:40px;padding:0 18px;border-radius:var(--radius-control);font-size:14px}
-.app:not(.closed) .cta{display:none}
+.app:not(.closed) #openSide{display:none}
+.cta.outline{background:none;color:var(--text-primary);border:1px solid var(--border-subtle)}
+@media (hover:hover){.cta.outline:hover{background:var(--surface-hover-subtle)}}
+.search{position:relative;display:flex;align-items:center}
+.search input{width:0;opacity:0;visibility:hidden;border:0;border-bottom:1px solid var(--border-subtle);background:none;font:inherit;font-size:15px;color:var(--text-primary);padding:8px 0;outline:none;transition:width .25s ease,opacity .2s,visibility .25s}
+.search input::placeholder{color:var(--text-secondary)}
+.search.open input{width:min(320px,45vw);opacity:1;visibility:visible}
+.search-btn{border:0;background:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--text-primary)}
+.sdrop{position:absolute;top:calc(100% + 8px);right:0;z-index:12;width:min(400px,calc(100vw - 32px));max-height:60vh;overflow-y:auto;background:var(--surface-raised);border-radius:var(--radius-option);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle) inset;padding:var(--gap-tight) var(--inset-control)}
+.sdrop .setrow{cursor:pointer}
+.sdrop .ms{text-align:left;margin:12px 0}
 .review{border:0;background:var(--accent);color:var(--text-on-accent);height:36px;padding:0 14px;border-radius:var(--radius-control);font-size:13px}
 .main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 max(var(--gutter-page-compact),env(safe-area-inset-right,0px)) var(--inset-surface) max(var(--gutter-page-compact),env(safe-area-inset-left,0px))}
 
 /* home: one section per product type, a few rows of small thumbnails */
+.sec+.sec{margin-top:var(--gap-section)}
 .sec{display:block;padding:var(--inset-control);border-radius:var(--radius-section);cursor:pointer;transition:background .15s}
 @media (hover:hover){.sec:hover{background:var(--surface-hover-subtle)}}
 .sec-h{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);min-height:24px;margin-bottom:var(--gap-controls)}
 .sec-t{margin:0;font-size:17px;font-weight:400}
-.va{display:flex;align-items:center;gap:var(--gap-tight);font-size:13px;color:var(--text-primary);text-decoration:none;opacity:0;transition:opacity .15s}
-.va .ic{width:18px;height:18px}
-.sec:hover .va,.sec:focus-within .va{opacity:1}
-@media (hover:none){.va{opacity:1}}
+.sec-l{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-stack);min-width:0}
+.sec-arrow{width:18px;height:18px;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .2s ease}
+.sec:hover .sec-arrow,.sec:focus-within .sec-arrow{opacity:1;transform:none}
+@media (hover:none){.sec-arrow{opacity:1;transform:none}}
+.sec-pills{display:flex;flex-wrap:wrap;gap:var(--gap-stack);margin-left:var(--gap-tight)}
+.sec-pills .chip{height:26px}
 .thumbs{display:grid;grid-template-columns:repeat(var(--cols,8),var(--size-thumb));gap:var(--gap-thumb)}
 .tb{width:var(--size-thumb);height:var(--size-thumb);border:0;background:none;padding:5px;border-radius:var(--radius-thumb);display:block}
 .tb>svg,.tb>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
@@ -104,6 +117,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .qlab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin:0}
 .qh{margin:0;font-size:24px;font-weight:300;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
 .qs{margin:-6px 0 0;font-size:14px;color:var(--text-secondary)}
+.qsmall{margin:var(--gap-stack) 0 0;font-size:15px}
+.qsmall span{color:var(--text-secondary)}
 .past{margin:0;font-size:14px;color:var(--text-secondary)}
 .me{align-self:flex-end;max-width:85%;border:0;background:var(--surface-control);border-radius:16px;padding:9px 14px;font-size:14px;text-align:left}
 button.me{cursor:pointer}
@@ -243,8 +258,8 @@ b,strong{font-weight:400}
     <header class="hdr">
       <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
       <button class="review" id="reviewBtn" hidden></button>
-      <button class="icon-btn" id="searchBtn" aria-label="Search"></button>
-      <button class="cta" id="openSide">Create a setup</button>
+      <div class="search" id="search"><input id="searchIn" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><button class="search-btn" id="searchBtn" aria-label="Search" aria-expanded="false"></button><div class="sdrop" id="sdrop" hidden></div></div>
+      <button class="cta" id="openSide">Create setup</button>
     </header>
     <main class="main" id="main" aria-live="polite"></main>
     <footer class="foot">
@@ -252,8 +267,8 @@ b,strong{font-weight:400}
       <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a>’ Bean Base</span>
     </footer>
   </div>
-  <aside class="side" id="side" aria-label="Create a setup">
-    <div class="side-h"><h2>Create a setup</h2><button class="icon-btn flat" id="closeSide" aria-label="Close the setup assistant"></button></div>
+  <aside class="side" id="side" aria-label="Create setup">
+    <div class="side-h"><h2>Create setup</h2><button class="cta outline" id="closeSide">Close</button></div>
     <div class="thread" id="thread"></div>
     <div class="side-f">
       <div class="sugg" id="sugg"></div>
@@ -547,7 +562,7 @@ function renderMain(fresh){
 }
 function renderHome(){
   main.innerHTML=CATS.map(c=>`<section class="sec" data-go="${c.key}" aria-labelledby="t-${c.key}">
-    <div class="sec-h"><h2 class="sec-t" id="t-${c.key}">${c.label}</h2><a class="va" href="#${c.key}">View all ${c.short} ${ico('right')}</a></div>
+    <div class="sec-h"><div class="sec-l"><h2 class="sec-t" id="t-${c.key}"><a href="#${c.key}" style="color:inherit;text-decoration:none">${c.label}</a></h2><svg class="ic sec-arrow" viewBox="0 0 24 24" aria-hidden="true">${ICONS.right}</svg><span class="sec-pills" data-pills="${c.key}"></span></div></div>
     <div class="thumbs" data-thumbs="${c.key}"></div></section>`).join('');
   fillThumbs();
 }
@@ -555,18 +570,53 @@ function cols(){
   const w=main.clientWidth-parseFloat(getComputedStyle(main).paddingLeft)*2-32;
   return Math.max(3,Math.min(20,Math.floor((w+8)/68)));
 }
-function fillThumbs(){
-  if(S.view!=='home')return;
-  const n=cols(), max=n*5;
-  CATS.forEach(c=>{
-    const el=main.querySelector(`[data-thumbs="${c.key}"]`);if(!el)return;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fillThumbs(){if(S.view==='home')CATS.forEach(c=>drawSection(c,false))}
+function sectionItems(c){const all=filtered(c,S.filters[c.key]||[]),n=cols(),max=n*5,show=all.length>max?all.slice(0,max-1):all;return {all,show,n,more:all.length>max?all.length-show.length:0}}
+function thumbEl(it){const b=document.createElement('button');b.className='tb';b.dataset.open=it.id;b.setAttribute('aria-label',it.name);b.title=it.name;b.innerHTML=pic(it);return b}
+function renderPills(c){
+  const el=main.querySelector(`[data-pills="${c.key}"]`);if(!el)return;
+  const sel=S.filters[c.key]||[];
+  el.innerHTML=c.groups.flat().filter(o=>sel.includes(o[0])).map(o=>`<button class="chip" aria-pressed="true" data-unpill="${o[0]}" data-cat="${c.key}" aria-label="Remove filter ${esc(o[1])}">${esc(o[1])}${ico('x')}</button>`).join('');
+}
+const pending={};
+function drawSection(c,animate){
+  const el=main.querySelector(`[data-thumbs="${c.key}"]`);if(!el)return;
+  renderPills(c);
+  const old=new Map([...el.querySelectorAll('.tb[data-open]')].map(b=>[b.dataset.open,b]));
+  const build=()=>{
+    const {all,show,n,more}=sectionItems(c), ids=new Set(show.map(x=>x.id));
     el.style.setProperty('--cols',n);
-    const all=items(c);
-    if(!all.length){el.outerHTML=`<p class="ms" data-thumbs="${c.key}">${loadingMsg()}</p>`;return}
-    const show=all.length>max?all.slice(0,max-1):all;
-    el.innerHTML=show.map(it=>`<button class="tb" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
-      +(all.length>max?`<a class="tb more" href="#${c.key}" aria-label="View all ${all.length.toLocaleString('en-US')} ${c.short}">${(all.length-show.length).toLocaleString('en-US')}<span>more</span></a>`:'');
-  });
+    const first=new Map();if(animate&&!reduce)old.forEach((b,id)=>{if(ids.has(id)&&b.isConnected)first.set(id,b.getBoundingClientRect())});
+    if(!all.length){el.innerHTML=`<p class="ms" style="grid-column:1/-1">${(LOAD==='ready'||LOAD==='stale')&&items(c).length?'Nothing here matches your answers. Remove a filter to see more.':loadingMsg()}</p>`;return}
+    const frag=document.createDocumentFragment(), entering=[];
+    show.forEach(it=>{let b=old.get(it.id);if(!b){b=thumbEl(it);entering.push(b)}b.getAnimations().forEach(x=>x.cancel());b.style.pointerEvents='';frag.appendChild(b)});
+    if(more){const m=document.createElement('a');m.className='tb more';m.href='#'+c.key;m.setAttribute('aria-label',`View all ${all.length.toLocaleString('en-US')} ${c.short}`);m.innerHTML=`${more.toLocaleString('en-US')}<span>more</span>`;frag.appendChild(m)}
+    el.replaceChildren(frag);
+    if(!animate||reduce)return;
+    first.forEach((r,id)=>{const b=old.get(id),l=b.getBoundingClientRect(),dx=r.left-l.left,dy=r.top-l.top;
+      if(Math.abs(dx)>1||Math.abs(dy)>1)b.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.8,.2,1)'})});
+    entering.forEach((b,i)=>b.animate([{opacity:0},{opacity:1}],{duration:300,delay:150+Math.min(i,20)*10,fill:'backwards'}));
+  };
+  clearTimeout(pending[c.key]);
+  if(animate&&!reduce){
+    const keep=new Set(sectionItems(c).show.map(x=>x.id)), leaving=[...old].filter(([id])=>!keep.has(id)).map(([,b])=>b);
+    if(leaving.length){
+      // dim first, then fade out; the rest slide into the freed places
+      leaving.forEach(b=>{b.style.pointerEvents='none';b.animate([{opacity:1},{opacity:.3,offset:.35},{opacity:.3,offset:.6},{opacity:0,transform:'scale(.92)'}],{duration:700,easing:'ease-out',fill:'forwards'})});
+      pending[c.key]=setTimeout(build,700);return;
+    }
+  }
+  build();
+}
+// answers in the assistant filter the products where they are
+function refreshFilters(keys){
+  if(!keys.length)return;
+  if(S.view==='home'){
+    keys.forEach(k=>drawSection(CATS.find(c=>c.key===k),true));
+    const sec=main.querySelector(`[data-go="${keys[0]}"]`);
+    if(sec){const r=sec.getBoundingClientRect(),m=main.getBoundingClientRect();if(r.top<m.top||r.top>m.bottom-120)sec.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
+  }else if(keys.includes(S.view))renderCat(CATS.find(c=>c.key===S.view),false);
 }
 function chipsHtml(c,sel){
   const opts=c.groups.flat(), on=opts.filter(o=>sel.includes(o[0])), off=opts.filter(o=>!sel.includes(o[0]));
@@ -589,6 +639,8 @@ function drawGrid(){
     :`<p class="empty">${LOAD==='ready'||LOAD==='stale'?'Nothing matches all of these filters. Remove one to see more.':loadingMsg()}</p>`;
 }
 main.addEventListener('click',e=>{
+  const up=e.target.closest('[data-unpill]');
+  if(up){const k=up.dataset.cat;S.filters[k]=(S.filters[k]||[]).filter(x=>x!==up.dataset.unpill);save();refreshFilters([k]);return}
   const o=e.target.closest('[data-open]');if(o){openProduct(o.dataset.open);return}
   const ch=e.target.closest('[data-chip]');
   if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
@@ -640,17 +692,25 @@ function answer(k,v){
   const a=A(), steps=order(a);
   steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});
   if(k==='drinks'&&v==='easy')a.easy=true;else a[k]=v;
-  // show the matching products on the left as the conversation goes
-  if(k==='hands')go('espresso',[v]);
-  else if(k==='brew')go('brewers',[v]);
-  else if(k==='kit'&&v==='add')go('kettles',[]);
-  else if(k==='grinder'&&v==='no')go('grinders',grinderFilters(a));
-  else if(k==='gtype')go('grinders',grinderFilters(a));
-  else if(k==='drinks'&&a.easy)go('espresso',['guided']);
-  save();renderSide();
+  save();applyChat();renderSide();
 }
-function undoTo(k){const a=A(),steps=order(a);steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});picks=new Set();save();renderSide()}
-function startOver(){S.chat={};picks=new Set();LOG=[];save();renderSide()}
+function undoTo(k){const a=A(),steps=order(a);steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});picks=new Set();save();applyChat();renderSide()}
+function startOver(){S.chat={};picks=new Set();LOG=[];save();applyChat();renderSide()}
+function chatFilters(a){
+  const f={}, d=a.drinks||[];
+  if(a.easy)f.espresso=['guided'];else{const e=[];if(a.hands)e.push(a.hands);if(d.includes('milk'))e.push('milk');if(e.length)f.espresso=e}
+  if(a.brew)f.brewers=[a.brew];
+  if(a.grinder==='no')f.grinders=grinderFilters(a);
+  if(d.length||a.easy){const esp=wantsEsp(a),fil=wantsFil(a);if(esp!==fil)f.beans=[esp?'forEsp':'forFil']}
+  return f;
+}
+const CHAT_CATS=['espresso','brewers','grinders','beans'];
+let lastChat={};
+function applyChat(){
+  const f=chatFilters(A()), touched=[];
+  CHAT_CATS.forEach(k=>{const was=JSON.stringify(lastChat[k]||[]),now=JSON.stringify(f[k]||[]);if(was!==now){S.filters[k]=f[k]||[];touched.push(k)}});
+  lastChat=f;S.chatFilters=f;save();refreshFilters(touched);
+}
 
 // a suggested setup that fits the answers and the budget
 function suggest(a){
@@ -681,7 +741,7 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<p class="qlab">Start</p><h3 class="qh">${st.q}</h3><p class="qs">${st.sub}</p>
+  if(k==='drinks')return `<h3 class="qh">Your coffee setup, dialled in for less</h3><p class="qs" style="margin:0">For home baristas and café owners. Find the right gear and beans, keep track of what you own, and catch the deals, so every cup is great without overspending.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}
     <button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button><button data-ans="drinks" data-v="easy">Not sure, just make it easy</button></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
@@ -744,14 +804,28 @@ document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault()
 function setSide(open){S.side=open;save();app.classList.toggle('closed',!open);if(open)setTimeout(()=>thread.querySelector('button,[tabindex]')?.focus(),60);else document.getElementById('openSide').focus()}
 document.getElementById('openSide').onclick=()=>setSide(true);
 document.getElementById('closeSide').onclick=()=>setSide(false);
-document.getElementById('closeSide').innerHTML=ico('sideClose');
-document.getElementById('searchBtn').innerHTML=ico('search');
 document.querySelector('.send').innerHTML=ico('send');
-document.getElementById('searchBtn').onclick=openSearch;
+const sWrap=document.getElementById('search'), sIn=document.getElementById('searchIn'), sBtn=document.getElementById('searchBtn'), sDrop=document.getElementById('sdrop');
+sBtn.innerHTML=ico('search');
+function closeSearch(){sWrap.classList.remove('open');sIn.value='';sDrop.hidden=true;sBtn.setAttribute('aria-expanded','false')}
+sBtn.onclick=()=>{if(!sWrap.classList.contains('open')){sWrap.classList.add('open');sBtn.setAttribute('aria-expanded','true');setTimeout(()=>sIn.focus(),60)}else if(!sIn.value.trim()){closeSearch()}else sIn.focus()};
+sIn.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSearch();sBtn.focus()}});
+sIn.addEventListener('input',()=>{
+  const q=sIn.value.trim().toLowerCase();if(!q){sDrop.hidden=true;return}
+  const hits=GEAR.filter(it=>[it.name,it.brand,it.roaster,it.origin,sub(it)].join(' ').toLowerCase().includes(q)).sort(byPop).slice(0,20);
+  sDrop.innerHTML=hits.length?hits.map(it=>`<div class="setrow" role="button" tabindex="0" data-open="${esc(it.id)}"><div class="th">${pic(it)}</div><div style="min-width:0"><div class="nm2">${esc(it.name)}</div><div class="pp">${esc(catOf(it).label)}</div></div><span></span></div>`).join('')
+    :`<p class="ms">No products match “${esc(sIn.value)}”.</p>`;
+  sDrop.hidden=false;
+});
+sDrop.addEventListener('click',e=>{const r=e.target.closest('[data-open]');if(r){openProduct(r.dataset.open);closeSearch()}});
+sDrop.addEventListener('keydown',e=>{const r=e.target.closest('[data-open]');if(r&&e.key==='Enter'){openProduct(r.dataset.open);closeSearch()}});
+document.addEventListener('click',e=>{if(sWrap.contains(e.target))return;if(!sIn.value.trim())closeSearch();else sDrop.hidden=true});
+sIn.addEventListener('focus',()=>{if(sIn.value.trim())sDrop.hidden=false});
 document.getElementById('aboutBtn').onclick=openAbout;
 document.getElementById('signBtn').onclick=async()=>{if(SESSION){await SB.auth.signOut();toast('Signed out')}else openSignIn()};
 function renderSign(){document.getElementById('signBtn').textContent=SESSION?'Sign out':'Sign in'}
 if(phoneMQ.matches)S.side=false;
+lastChat=S.chatFilters||{};
 app.classList.toggle('closed',!S.side);
 
 function openSearch(){
