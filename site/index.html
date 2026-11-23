@@ -77,10 +77,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (hover:hover){
   .sec:hover .sec-t a{transform:translateX(4px);transition:transform .3s cubic-bezier(.3,1.45,.6,1)}
   .sec:hover .sec-t .ch{font-weight:500;color:var(--text-highlight);transition:font-weight .1s ease-out,color .15s ease-out;transition-delay:calc(var(--i) * 12ms)}
-  .sec:hover .sec-arrow{opacity:1;color:var(--text-highlight);transform:translateX(4px);transition:opacity .15s ease-out,transform .3s cubic-bezier(.3,1.45,.6,1)}
 }
 .sec:focus-within .sec-t .ch{font-weight:500;color:var(--text-highlight)}
-.sec:focus-within .sec-arrow{opacity:1;transform:none}
 @media (hover:none){.sec-arrow{opacity:1;transform:none}}
 .sec-pills{display:flex;flex-wrap:wrap;gap:var(--gap-stack);margin-left:var(--gap-tight)}
 .sec-pills .chip{height:26px}
