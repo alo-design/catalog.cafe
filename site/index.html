@@ -965,7 +965,7 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<h3 class="qh">Browse coffee essentials or plan your café</h3><p class="qsmall">${st.q}</p>
+  if(k==='drinks')return `<h3 class="qh">Browse coffee essentials or plan your café setup</h3><p class="qsmall">${st.q}</p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
     <div class="ans-acts"><span></span><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
