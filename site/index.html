@@ -281,6 +281,21 @@ button.me{cursor:pointer}
   .foot{justify-content:center;padding:var(--gap-stack) var(--gutter-page-compact)}
 }
 
+/* ---------- 2026-11-23 pass 2: shorter chat, softer hairlines, round search ---------- */
+.chat{flex-direction:row!important;align-items:center!important;height:52px!important;padding:0 8px 0 16px!important;gap:var(--gap-stack)}
+.chat .send{align-self:center!important}
+.ans button{border-bottom:1px solid var(--surface-control)}
+.ans button:first-child{border-top:0}
+.ans button:last-child{border-bottom:0}
+.top2 .search{width:auto;height:40px;border:1px solid transparent;border-radius:var(--radius-control);padding:0 4px;transition:border-color .2s}
+.top2 .search input,.top2 .search.open input{width:0;opacity:0;visibility:hidden;flex:none;transition:width .25s ease,opacity .2s,visibility .25s}
+.top2 .search.open{border-color:var(--border-subtle);padding-left:16px}
+.top2 .search.open input{width:min(280px,45vw);opacity:1;visibility:visible}
+.top2 .search-btn{pointer-events:auto;color:var(--text-primary);border-radius:50%}
+.top2 .search-btn .ic{width:20px;height:20px}
+.top2 .search{flex-direction:row-reverse}
+.top2 .sdrop{left:auto;right:0}
+
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
 @keyframes fade{from{opacity:0}}
@@ -383,7 +398,7 @@ b,strong{font-weight:400}
   <header class="top2">
     <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
     <button class="review" id="reviewBtn" hidden></button>
-    <div class="search open" id="search"><button class="search-btn" id="searchBtn" aria-label="Search" tabindex="-1"></button><input id="searchIn" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><div class="sdrop" id="sdrop" hidden></div></div>
+    <div class="search" id="search"><button class="search-btn" id="searchBtn" aria-label="Search" aria-expanded="false"></button><input id="searchIn" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><div class="sdrop" id="sdrop" hidden></div></div>
   </header>
   <aside class="chatcol" id="side" aria-label="Find your setup">
     <div class="thread" id="thread"></div>
@@ -867,7 +882,7 @@ main.addEventListener('scroll',()=>{
 /* ---------- setup assistant: follows the conversation tree ---------- */
 const STEPS={
   drinks:{q:'What do you like to drink?',sub:'Pick all that apply',multi:true,
-    o:[['espresso','Espresso'],['milk','Lattes & cappuccinos'],['americano','Americano'],['filter','Pour-over or drip']]},
+    o:[['espresso','Espresso'],['milk','Lattes & cappuccinos'],['americano','Americano'],['filter','Pour-over or drip'],['unsure','Not sure']]},
   hands:{q:'How hands-on do you want to be?',o:[['lever','Manual lever','Pull every shot by hand'],['semi','Semi-automatic','You start and stop the shot'],['guided','Let the machine help','Built-in grinder or automatic milk']]},
   brew:{q:'How do you like to brew?',o:[['pourover','Pour-over'],['immersion','Immersion, like an AeroPress'],['press','French press'],['machine','Drip machine']]},
   kit:{q:'Do you have a gooseneck kettle and a scale?',o:[['have','Yes, both'],['add','Add them to my setup']]},
@@ -888,7 +903,7 @@ function order(a){
 }
 const optLabel=o=>typeof o[1]==='function'?o[1]():o[1];
 function answerText(k,a){
-  if(k==='drinks')return a.easy?'Not sure, just make it easy':STEPS.drinks.o.filter(o=>a.drinks.includes(o[0])).map(o=>o[1]).join(', ');
+  if(k==='drinks')return a.easy?'Not sure':STEPS.drinks.o.filter(o=>a.drinks.includes(o[0])).map(o=>o[1]).join(', ');
   const o=STEPS[k].o.find(x=>x[0]===a[k]);return o?optLabel(o):'';
 }
 let picks=new Set();   // drinks ticked but not yet confirmed
@@ -950,9 +965,9 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<h3 class="qh">Find the perfect coffee gear for your home or café</h3><p class="qs">Tell me what you need, or start with a question.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
+  if(k==='drinks')return `<h3 class="qh">Browse coffee essentials or plan your café</h3><p class="qsmall">${st.q}</p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
-    <div class="ans-acts"><button class="linkish" data-ans="drinks" data-v="easy">Not sure? Make it easy</button><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></div>`;
+    <div class="ans-acts"><span></span><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
   if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh">${st.q}</h3>${opts}<p class="hint">${st.hint}</p></div>`;
   return `<h3 class="qh">${st.q}</h3>${opts}`;
@@ -979,8 +994,8 @@ function renderSide(){
 }
 document.getElementById('side').addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
-  if(t.dataset.pick){const v=t.dataset.pick;picks.has(v)?picks.delete(v):picks.add(v);renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
-  if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v)}return}
+  if(t.dataset.pick){const v=t.dataset.pick;if(picks.has(v))picks.delete(v);else if(v==='unsure')picks=new Set(['unsure']);else{picks.delete('unsure');picks.add(v)}renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
+  if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v.includes('unsure')?'easy':v)}return}
   if(t.dataset.ans){answer(t.dataset.ans,t.dataset.v);return}
   if(t.dataset.undo){undoTo(t.dataset.undo);return}
   if(t.dataset.open){openProduct(t.dataset.open);return}
@@ -1018,8 +1033,8 @@ document.getElementById('chatIn').addEventListener('input',e=>{clearTimeout(qTim
 document.querySelector('.send').innerHTML=ico('send');
 const sWrap=document.getElementById('search'), sIn=document.getElementById('searchIn'), sBtn=document.getElementById('searchBtn'), sDrop=document.getElementById('sdrop');
 sBtn.innerHTML=ico('search');
-function closeSearch(){sIn.value='';sDrop.hidden=true}
-sBtn.onclick=()=>sIn.focus();
+function closeSearch(){sWrap.classList.remove('open');sIn.value='';sDrop.hidden=true;sBtn.setAttribute('aria-expanded','false')}
+sBtn.onclick=()=>{if(!sWrap.classList.contains('open')){sWrap.classList.add('open');sBtn.setAttribute('aria-expanded','true');setTimeout(()=>sIn.focus(),60)}else if(!sIn.value.trim())closeSearch();else sIn.focus()};
 sIn.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSearch();sBtn.focus()}});
 sIn.addEventListener('input',()=>{
   const q=sIn.value.trim().toLowerCase();if(!q){sDrop.hidden=true;return}
@@ -1030,7 +1045,7 @@ sIn.addEventListener('input',()=>{
 });
 sDrop.addEventListener('click',e=>{const r=e.target.closest('[data-open]');if(r){openProduct(r.dataset.open);closeSearch()}});
 sDrop.addEventListener('keydown',e=>{const r=e.target.closest('[data-open]');if(r&&e.key==='Enter'){openProduct(r.dataset.open);closeSearch()}});
-document.addEventListener('click',e=>{if(sWrap.contains(e.target))return;sDrop.hidden=true});
+document.addEventListener('click',e=>{if(sWrap.contains(e.target))return;if(!sIn.value.trim())closeSearch();else sDrop.hidden=true});
 sIn.addEventListener('focus',()=>{if(sIn.value.trim())sDrop.hidden=false});
 document.getElementById('aboutBtn').onclick=openAbout;
 document.getElementById('signBtn').onclick=async()=>{if(SESSION){await SB.auth.signOut();toast('Signed out')}else openSignIn()};
