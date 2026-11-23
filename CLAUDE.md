@@ -10,6 +10,6 @@ The source of truth is the catalog.cafe design system: https://claude.ai/artifac
 - Use semantic tokens only (`--text-primary`, `--surface-raised`, `--action-primary`, `--radius-control`, `--gap-controls`…). Never use a primitive (`--grey-*`, `--bronze-*`) or a literal colour, radius or shadow in a component rule.
 - One typeface, two weights: Helvetica Neue Light (300) for headings, Regular (400) for everything else. No bold, no other fonts.
 - Black, white and grey. `--accent` is only for owner-only controls and data highlights.
-- Both themes come from the tokens. Do not write theme-specific colours in components.
+- Light theme only: there is no dark mode (product photos are shot for light backgrounds). Do not write theme-specific colours in components.
 - If no token fits, add a semantic token to the design system first, then mirror it here.
 - When a design decision changes, update the design system in the same piece of work.
