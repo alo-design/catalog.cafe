@@ -21,7 +21,7 @@
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
   --radius-control:999px; --radius-option:14px; --radius-surface:22px;
-  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px; --gap-section:24px;
+  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px; --gap-section:24px; --width-chat:360px; --radius-bento:32px; --radius-container:40px;
   --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:light;
 }
@@ -162,6 +162,67 @@ button.me{cursor:pointer}
 .chat input::placeholder{color:var(--text-secondary)}
 .send{border:0;width:36px;height:36px;border-radius:50%;background:var(--action-primary);color:var(--text-on-action);display:grid;place-items:center}
 
+/* ---------- bento layout (2026-11): chat column on the left, product groups as bentos on the right ---------- */
+.app{grid-template-columns:var(--width-chat) minmax(0,1fr)!important;background:var(--surface-raised)}
+.chatcol{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;position:relative}
+.chat-h{flex:none;display:flex;align-items:center;gap:var(--gap-stack);height:40px;margin:calc(var(--inset-surface) * 2) var(--inset-surface) 0 32px;position:relative}
+.chat-h .logo{margin-right:auto}
+.chat-h .search.open input{width:150px}
+.chat-h .sdrop{left:0;right:0;width:auto;top:calc(100% + 8px)}
+.chatcol .thread{padding:var(--inset-surface) var(--inset-surface) var(--inset-control) 32px}
+.chatcol .side-f{padding:var(--gap-stack) var(--inset-surface) var(--inset-surface)}
+.ans .go{align-self:flex-start;min-height:40px;padding:0 20px;border-radius:var(--radius-control);margin-top:var(--gap-stack)}
+.ans .go+button{margin-top:var(--gap-tight)}
+.main{height:calc(100% - var(--height-footer));padding:var(--inset-surface) var(--inset-surface) 0 0}
+.groups{min-height:100%;margin-bottom:var(--inset-surface);background:var(--surface-page);border-radius:var(--radius-container);padding:var(--inset-surface) var(--inset-surface) calc(var(--inset-surface) * 2)}
+.fam+.fam{margin-top:calc(var(--inset-surface) * 1.5)}
+.fam-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-controls);height:40px;margin:0 var(--gap-tight) var(--gap-controls)}
+.fam-h h2{margin:0;font-size:24px;font-weight:300;letter-spacing:-.02em;line-height:40px}
+.fam-n{font-size:13px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.bentos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--inset-surface)}
+@media (max-width:1180px){.bentos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bento{position:relative;overflow:hidden;background:var(--surface-raised);border-radius:var(--radius-bento);padding:20px var(--inset-surface) var(--inset-surface);cursor:pointer;outline-offset:3px}
+.b-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-controls);margin-bottom:var(--gap-controls)}
+.b-h .sec-t{min-width:0}
+.b-n{font-size:13px;color:var(--text-secondary);font-variant-numeric:tabular-nums;flex:none}
+.b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
+.tb2{border:0;background:none;padding:12%;border-radius:var(--radius-thumb);aspect-ratio:1;display:block;width:100%}
+.tb2>svg,.tb2>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
+@media (hover:hover){.tb2:hover{background:var(--surface-hover-subtle)}}
+.b-msg{grid-column:1/-1;align-self:center;text-align:center;margin:0;font-size:13px;color:var(--text-secondary)}
+.bento.empty{background:none;border:1.5px dashed var(--border-subtle);cursor:default}
+.bento.empty .sec-t,.bento.empty .b-n{color:var(--text-secondary)}
+.bento.miss .b-grid,.bento.miss .b-h{opacity:.45}
+/* sorting: the bento dims slightly and a soft shimmer passes while its count ticks down */
+.bento.busy{pointer-events:none}
+.bento.busy .b-grid{opacity:.55}
+.bento.busy::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 25%,var(--surface-raised) 50%,transparent 75%);background-size:250% 100%;opacity:.55;animation:shimmer 1s linear infinite;pointer-events:none}
+@keyframes shimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+@media (hover:hover){
+  .bento:not(.empty):hover .sec-t a,.bento:not(.empty):hover .sec-t .lbl{transform:translateX(4px);transition:transform .3s cubic-bezier(.3,1.45,.6,1)}
+  .bento:not(.empty):hover .sec-t .ch{font-weight:500;color:var(--text-highlight);transition:font-weight .1s ease-out,color .15s ease-out;transition-delay:calc(var(--i) * 12ms)}
+}
+.bento:focus-visible .sec-t .ch{font-weight:500;color:var(--text-highlight)}
+.sec-t .lbl{display:inline-block}
+.kw{display:inline-flex;align-items:center;height:26px;padding:0 10px;margin:4px 6px 0 0;border-radius:var(--radius-control);background:var(--surface-page);color:var(--text-highlight);font-size:13px}
+.groups.catpage{padding-top:var(--gap-stack)}
+.foot{position:fixed;right:max(var(--inset-surface),env(safe-area-inset-right,0px));bottom:0;z-index:5;min-height:var(--height-footer);display:flex;align-items:center;gap:var(--inset-control);padding:0 var(--gap-stack) env(safe-area-inset-bottom,0px);font-size:11px;color:var(--text-secondary);background:none}
+@media (max-width:760px){
+  .app{position:static;display:block!important;height:auto}
+  body{overflow:auto}
+  .chatcol{height:auto}
+  .chat-h{margin-left:var(--gutter-page-compact);margin-right:var(--gutter-page-compact)}
+  .chatcol .thread{padding-left:var(--gutter-page-compact);padding-right:var(--gutter-page-compact);overflow:visible}
+  .chatcol .side-f{padding:var(--gap-stack) var(--gutter-page-compact) var(--inset-control)}
+  .main{padding:0 var(--gap-stack) var(--height-footer);overflow:visible}
+  .groups{border-radius:var(--radius-bento);padding:var(--inset-control)}
+  .bentos{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-stack)}
+  .bento{padding:var(--inset-control);border-radius:var(--radius-option)}
+  .bento .sec-t{font-size:15px}
+  .fam-h h2{font-size:20px}
+  .foot{position:static;justify-content:center;flex-wrap:wrap}
+}
+
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
 @keyframes fade{from{opacity:0}}
@@ -261,28 +322,25 @@ b,strong{font-weight:400}
 </head>
 <body>
 <div class="app" id="app">
-  <div class="pane">
-    <header class="hdr">
+  <aside class="chatcol" id="side" aria-label="Find your setup">
+    <div class="chat-h">
       <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
       <button class="review" id="reviewBtn" hidden></button>
-      <div class="search" id="search"><input id="searchIn" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><button class="search-btn" id="searchBtn" aria-label="Search" aria-expanded="false"></button><div class="sdrop" id="sdrop" hidden></div></div>
-      <button class="cta" id="openSide">Create setup</button>
-    </header>
-    <main class="main" id="main" aria-live="polite"></main>
-    <footer class="foot">
-      <nav><button id="aboutBtn">About and affiliate disclosure</button><button id="signBtn">Sign in</button></nav>
-      <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a>’ Bean Base</span>
-    </footer>
-  </div>
-  <aside class="side" id="side" aria-label="Create setup">
-    <div class="side-h"><h2>Create setup</h2><button class="cta outline" id="closeSide">Close</button></div>
+      <div class="search" id="search"><input id="searchIn" type="search" placeholder="Search products…" aria-label="Search products" autocomplete="off"><button class="search-btn" id="searchBtn" aria-label="Search" aria-expanded="false"></button></div>
+      <div class="sdrop" id="sdrop" hidden></div>
+    </div>
     <div class="thread" id="thread"></div>
     <div class="side-f">
       <div class="sugg" id="sugg"></div>
-      <form class="chat" id="chat"><input id="chatIn" type="text" placeholder="Ask anything, or tell me what you need…" aria-label="Ask the setup assistant" autocomplete="off"><button class="send" aria-label="Send"></button></form>
+      <form class="chat" id="chat"><input id="chatIn" type="text" placeholder="Tell me what you need…" aria-label="Tell the setup assistant what you need" autocomplete="off"><button class="send" aria-label="Send"></button></form>
     </div>
   </aside>
+  <main class="main" id="main" aria-live="polite"></main>
 </div>
+<footer class="foot">
+  <button id="aboutBtn">About and affiliate disclosure</button><button id="signBtn">Sign in</button>
+  <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a></span>
+</footer>
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/config.js"></script>
@@ -330,15 +388,16 @@ const ico=k=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}
    Filters inside a group are alternatives (Hand or Electric); groups combine (Electric and Espresso). */
 const CATS=[
  {key:'espresso',label:'Espresso machines',short:'machines',cats:['espresso'],groups:[
-   [['lever','Lever',g=>g.effort===3],['semi','Semi-automatic',g=>g.effort===2],['guided','Guided',g=>g.effort===1]],
+   [['semi','Semi-automatic',g=>g.effort!==3&&g.kind!=='super'],['super','Super-automatic',g=>g.kind==='super'],['lever','Manual and lever',g=>g.effort===3]],
+   [['easy','Easy to use',g=>g.kind==='super'||g.effort===1||!!g.builtIn]],
    [['milk','Steam wand',g=>!!g.milk]],[['grinder','Built-in grinder',g=>!!g.builtIn]],[['compact','Compact',g=>g.w===1]]]},
  {key:'grinders',label:'Grinders',short:'grinders',cats:['grinder'],groups:[
    [['hand','Hand',g=>g.kind==='hand'],['electric','Electric',g=>g.kind!=='hand']],
    [['espresso','Espresso',g=>(g.does||[]).includes('espresso')],['filter','Filter',g=>(g.does||[]).includes('filter')]],
    [['single','Single dose',g=>g.kind!=='hand'&&g.kind!=='hopper'],['hopper','Hopper',g=>g.kind==='hopper']]]},
- {key:'brewers',label:'Brewers',short:'brewers',cats:['brewer'],groups:[
+ {key:'brewers',label:'Coffee makers',short:'coffee makers',cats:['brewer'],groups:[
    [['pourover','Pour-over',g=>['cone','chemex'].includes(g.kind)],['immersion','Immersion',g=>['steep','aeropress'].includes(g.kind)],
-    ['press','French press',g=>g.kind==='press'],['moka','Moka pot',g=>g.kind==='moka'],['machine','Drip machine',g=>!['cone','chemex','steep','aeropress','press','moka'].includes(g.kind)]]]},
+    ['press','French press',g=>g.kind==='press'],['moka','Moka pot',g=>g.kind==='moka'],['machine','Drip machine',g=>!['cone','chemex','steep','aeropress','press','moka','cold'].includes(g.kind)],['cold','Cold brew',g=>g.kind==='cold']]]},
  {key:'kettles',label:'Kettles and scales',short:'kettles and scales',cats:['kettle','scale'],groups:[
    [['kettle','Kettles',g=>g.cat==='kettle'],['scale','Scales',g=>g.cat==='scale']],
    [['electric','Electric',g=>g.cat==='kettle'&&!!g.electric],['stove','Stovetop',g=>g.cat==='kettle'&&!g.electric]],
@@ -567,63 +626,132 @@ function renderMain(fresh){
   if(S.view==='home')renderHome();else renderCat(CATS.find(c=>c.key===S.view),fresh);
   if(fresh)main.scrollTop=0;
 }
-function renderHome(){
-  main.innerHTML=CATS.map(c=>`<section class="sec" data-go="${c.key}" aria-labelledby="t-${c.key}">
-    <div class="sec-h"><div class="sec-l"><h2 class="sec-t" id="t-${c.key}"><a href="#${c.key}" aria-label="${c.label}">${[...c.label].map((ch,i)=>`<span class="ch" style="--i:${i}" aria-hidden="true">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}</a></h2><svg class="ic sec-arrow" viewBox="0 0 24 24" aria-hidden="true">${ICONS.right}</svg><span class="sec-pills" data-pills="${c.key}"></span></div></div>
-    <div class="thumbs" data-thumbs="${c.key}"></div></section>`).join('');
-  fillThumbs();
-}
-function cols(){
-  const w=main.clientWidth-parseFloat(getComputedStyle(main).paddingLeft)*2-32;
-  return Math.max(3,Math.min(20,Math.floor((w+8)/68)));
-}
+/* Home: product groups sorted the way coffee retailers sort them, one bento per group, 3×3 products each. */
+const GROUPS=[
+ {fam:'Espresso machines',items:[{t:'Semi-automatic',k:'espresso',f:['semi']},{t:'With a built-in grinder',k:'espresso',f:['grinder']},{t:'Super-automatic',k:'espresso',f:['super']},{t:'Manual and lever',k:'espresso',f:['lever']}]},
+ {fam:'Grinders',items:[{t:'Espresso grinders',k:'grinders',f:['electric','espresso']},{t:'Filter grinders',k:'grinders',f:['electric','filter']},{t:'Hand grinders',k:'grinders',f:['hand']}]},
+ {fam:'Coffee makers',items:[{t:'Pour-over',k:'brewers',f:['pourover']},{t:'Immersion and AeroPress',k:'brewers',f:['immersion']},{t:'French press',k:'brewers',f:['press']},{t:'Moka pots',k:'brewers',f:['moka']},{t:'Drip coffee makers',k:'brewers',f:['machine']},{t:'Cold brew',k:'brewers',f:['cold']}]},
+ {fam:'Brewing tools',items:[{t:'Kettles',k:'kettles',f:['kettle']},{t:'Scales',k:'kettles',f:['scale']},{t:'Paper and metal filters',empty:true}]},
+ {fam:'Espresso tools',items:[{t:'Tampers and distribution',empty:true},{t:'Portafilters and baskets',empty:true},{t:'Knock boxes and cleaning',empty:true}]},
+ {fam:'Milk',items:[{t:'Milk frothers and jugs',empty:true}]},
+ {fam:'Coffee beans',items:[{t:'Light roast',k:'beans',f:['light']},{t:'Medium roast',k:'beans',f:['medium']},{t:'Dark roast',k:'beans',f:['dark']}]}];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function fillThumbs(){if(S.view==='home')CATS.forEach(c=>drawSection(c,false))}
-function sectionItems(c){const all=filtered(c,S.filters[c.key]||[]),n=cols(),max=n*5,show=all.length>max?all.slice(0,max-1):all;return {all,show,n,more:all.length>max?all.length-show.length:0}}
-function thumbEl(it){const b=document.createElement('button');b.className='tb';b.dataset.open=it.id;b.setAttribute('aria-label',it.name);b.title=it.name;b.innerHTML=pic(it);return b}
-function renderPills(c){
-  const el=main.querySelector(`[data-pills="${c.key}"]`);if(!el)return;
-  const sel=S.filters[c.key]||[];
-  el.innerHTML=c.groups.flat().filter(o=>sel.includes(o[0])).map(o=>`<button class="chip" aria-pressed="true" data-unpill="${o[0]}" data-cat="${c.key}" aria-label="Remove filter ${esc(o[1])}">${esc(o[1])}${ico('x')}</button>`).join('');
+let QUERY=null;   // parsed words from the chat box, or null
+const passes=(c,sel,g)=>!sel||!sel.length||c.groups.every(gr=>{const on=gr.filter(o=>sel.includes(o[0]));return !on.length||on.some(o=>o[2](g))});
+function bentoItems(b){
+  const c=CATS.find(x=>x.key===b.k);
+  return filtered(c,b.f).filter(g=>passes(c,S.filters[b.k],g)&&(!QUERY||matchQuery(QUERY,g)));
 }
-const pending={};
-function drawSection(c,animate){
-  const el=main.querySelector(`[data-thumbs="${c.key}"]`);if(!el)return;
-  renderPills(c);
-  const old=new Map([...el.querySelectorAll('.tb[data-open]')].map(b=>[b.dataset.open,b]));
-  const build=()=>{
-    const {all,show,n,more}=sectionItems(c), ids=new Set(show.map(x=>x.id));
-    el.style.setProperty('--cols',n);
-    const first=new Map();if(animate&&!reduce)old.forEach((b,id)=>{if(ids.has(id)&&b.isConnected)first.set(id,b.getBoundingClientRect())});
-    if(!all.length){el.innerHTML=`<p class="ms" style="grid-column:1/-1">${(LOAD==='ready'||LOAD==='stale')&&items(c).length?'Nothing here matches your answers. Remove a filter to see more.':loadingMsg(c)}</p>`;return}
-    const frag=document.createDocumentFragment(), entering=[];
-    show.forEach(it=>{let b=old.get(it.id);if(!b){b=thumbEl(it);entering.push(b)}b.getAnimations().forEach(x=>x.cancel());b.style.pointerEvents='';frag.appendChild(b)});
-    if(more){const m=document.createElement('a');m.className='tb more';m.href='#'+c.key;m.setAttribute('aria-label',`View all ${all.length.toLocaleString('en-US')} ${c.short}`);m.innerHTML=`${more.toLocaleString('en-US')}<span>more</span>`;frag.appendChild(m)}
-    el.replaceChildren(frag);
-    if(!animate||reduce)return;
-    first.forEach((r,id)=>{const b=old.get(id),l=b.getBoundingClientRect(),dx=r.left-l.left,dy=r.top-l.top;
-      if(Math.abs(dx)>1||Math.abs(dy)>1)b.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:450,easing:'cubic-bezier(.2,.8,.2,1)'})});
-    entering.forEach((b,i)=>b.animate([{opacity:0},{opacity:1}],{duration:300,delay:150+Math.min(i,20)*10,fill:'backwards'}));
+const fmtN=n=>n.toLocaleString('en-US');
+function titleHtml(t){return `<span class="lbl">${[...t].map((ch,i)=>`<span class="ch" style="--i:${i}" aria-hidden="true">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}</span>`}
+function renderHome(){
+  main.innerHTML=`<div class="groups">${GROUPS.map((fam,fi)=>`<section class="fam" aria-labelledby="fam-${fi}"><div class="fam-h"><h2 id="fam-${fi}">${fam.fam}</h2><span class="fam-n" data-famn="${fi}"></span></div>
+    <div class="bentos">${fam.items.map((b,bi)=>b.empty
+      ?`<article class="bento empty" data-b="${fi}-${bi}"><div class="b-h"><h3 class="sec-t">${esc(b.t)}</h3><span class="b-n">0</span></div><div class="b-grid"><p class="b-msg">Coming soon</p></div></article>`
+      :`<article class="bento" data-b="${fi}-${bi}" data-go="${b.k}" data-f="${b.f.join(',')}" role="link" tabindex="0" aria-label="${esc(b.t)}"><div class="b-h"><h3 class="sec-t">${titleHtml(b.t)}</h3><span class="b-n" aria-live="off"></span></div><div class="b-grid"></div></article>`).join('')}</div></section>`).join('')}</div>`;
+  drawAll(false);
+}
+function famTotals(){GROUPS.forEach((fam,fi)=>{const ids=new Set();fam.items.forEach(b=>{if(!b.empty)bentoItems(b).forEach(g=>ids.add(g.id))});const el=main.querySelector(`[data-famn="${fi}"]`);if(el)el.textContent=`${fmtN(ids.size)} ${ids.size===1?'product':'products'}`})}
+function drawAll(animate,onlyKeys){
+  if(S.view!=='home')return;
+  GROUPS.forEach((fam,fi)=>fam.items.forEach((b,bi)=>{if(!b.empty&&(!onlyKeys||onlyKeys.includes(b.k)))drawBento(fi,bi,animate)}));
+  famTotals();
+}
+const timers={};
+function drawBento(fi,bi,animate){
+  const b=GROUPS[fi].items[bi], el=main.querySelector(`[data-b="${fi}-${bi}"]`);if(!el)return;
+  const nEl=el.querySelector('.b-n'), grid=el.querySelector('.b-grid'), key=fi+'-'+bi;
+  const list=bentoItems(b), show=list.slice(0,9), sig=show.map(x=>x.id).join('|')+'#'+list.length;
+  const finish=()=>{
+    el.classList.remove('busy');el.classList.toggle('miss',!list.length&&(LOAD==='ready'||LOAD==='stale'));
+    nEl.textContent=fmtN(list.length);nEl.dataset.v=list.length;el.dataset.sig=sig;
+    const c=CATS.find(x=>x.key===b.k), total=filtered(c,b.f).length;
+    grid.innerHTML=show.length?show.map(it=>`<button class="tb2" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
+      :`<p class="b-msg">${!total?(b.k==='beans'&&BEANS_LOADING&&LOAD!=='offline'?'Loading beans…':LOAD==='loading'?'Loading…':LOAD==='offline'?'Couldn’t load':'Coming soon'):'No matches'}</p>`;
   };
-  clearTimeout(pending[c.key]);
-  if(animate&&!reduce){
-    const keep=new Set(sectionItems(c).show.map(x=>x.id)), leaving=[...old].filter(([id])=>!keep.has(id)).map(([,b])=>b);
-    if(leaving.length){
-      // dim first, then fade out; the rest slide into the freed places
-      leaving.forEach(b=>{b.style.pointerEvents='none';b.animate([{opacity:1},{opacity:.3,offset:.35},{opacity:.3,offset:.6},{opacity:0,transform:'scale(.92)'}],{duration:700,easing:'ease-out',fill:'forwards'})});
-      pending[c.key]=setTimeout(build,700);return;
-    }
-  }
-  build();
+  clearInterval(timers[key]);
+  if(!animate||reduce||el.dataset.sig===sig){finish();return}
+  // sorting: dim with a shimmer while the count steps toward the new number now and then
+  el.classList.add('busy');
+  const from=Number(nEl.dataset.v||list.length), to=list.length, steps=3+Math.floor(Math.random()*3);let i=0;
+  timers[key]=setInterval(()=>{
+    i++;
+    if(i>=steps){clearInterval(timers[key]);finish();return}
+    const v=Math.round(from+(to-from)*(i/steps)+(Math.random()-.5)*Math.abs(to-from)*.15);
+    nEl.textContent=fmtN(Math.max(Math.min(from,to),Math.min(Math.max(from,to),v)));
+  },170+Math.random()*90);
 }
 // answers in the assistant filter the products where they are
 function refreshFilters(keys){
   if(!keys.length)return;
   if(S.view==='home'){
-    keys.forEach(k=>drawSection(CATS.find(c=>c.key===k),true));
-    const sec=main.querySelector(`[data-go="${keys[0]}"]`);
-    if(sec){const r=sec.getBoundingClientRect(),m=main.getBoundingClientRect();if(r.top<m.top||r.top>m.bottom-120)sec.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
+    drawAll(true,keys);
+    const first=GROUPS.flatMap((f,fi)=>f.items.map((b,bi)=>[b,fi,bi])).find(([b])=>keys.includes(b.k));
+    const el=first&&main.querySelector(`[data-b="${first[1]}-${first[2]}"]`);
+    if(el){const r=el.getBoundingClientRect(),m=main.getBoundingClientRect();if(r.top<m.top||r.top>m.bottom-120)el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'})}
   }else if(keys.includes(S.view))renderCat(CATS.find(c=>c.key===S.view),false);
+}
+
+/* Keyword matching for the chat box: recognised words narrow the bentos as you type.
+   Each rule answers true/false for products it applies to and null for products it doesn't (those drop out). */
+const STOP=new Set('a an and the for with to of in on my me i im i\'m want need looking something some good best that is it be can get any like under below less than over around about home cafe café coffee setup make makes making new first beginner one'.split(' '));
+const CAT_WORDS=[[/\bgrinders?\b/,'Grinders','grinder'],[/\b(espresso machines?|machines?)\b/,'Espresso machines','espresso'],[/\b(coffee makers?|brewers?)\b/,'Coffee makers','brewer'],[/\bkettles?\b/,'Kettles','kettle'],[/\bscales?\b/,'Scales','scale'],[/\b(beans?|roasts?)\b/,'Beans','bean']];
+const KW=[
+ [/\bespresso\b/,'Espresso',g=>g.cat==='espresso'?true:g.cat==='grinder'?(g.does||[]).includes('espresso'):g.cat==='bean'?g.for!=='filter':null],
+ [/\b(pour[- ]?overs?|v60|chemex|dripper|filter)\b/,'Filter',g=>g.cat==='brewer'?['cone','chemex','steep'].includes(g.kind):g.cat==='grinder'?(g.does||[]).includes('filter'):g.cat==='bean'?g.for!=='espresso':(g.cat==='kettle'||g.cat==='scale')?true:null],
+ [/\b(drip|batch)\b/,'Drip',g=>g.cat==='brewer'?!['cone','chemex','steep','aeropress','press','moka','cold'].includes(g.kind):null],
+ [/\baeropress\b/,'AeroPress',g=>g.cat==='brewer'?g.kind==='aeropress':null],
+ [/\bfrench press\b/,'French press',g=>g.cat==='brewer'?g.kind==='press':null],
+ [/\bmoka\b/,'Moka pot',g=>g.cat==='brewer'?g.kind==='moka':null],
+ [/\bcold brew\b/,'Cold brew',g=>g.cat==='brewer'?g.kind==='cold':null],
+ [/\b(lattes?|cappuccinos?|flat whites?|milk|steam)\b/,'Milk drinks',g=>g.cat==='espresso'?!!g.milk:null],
+ [/\b(super[- ]?auto(matic)?s?|all[- ]in[- ]one|bean[- ]to[- ]cup|one[- ]touch)\b/,'Super-automatic',g=>g.cat==='espresso'?g.kind==='super':null],
+ [/\bsemi[- ]?auto(matic)?\b/,'Semi-automatic',g=>g.cat==='espresso'?(g.effort!==3&&g.kind!=='super'):null],
+ [/\b(lever|manual)\b/,'Manual',g=>g.cat==='espresso'?g.effort===3:g.cat==='grinder'?g.kind==='hand':null],
+ [/\bhand\b/,'Hand',g=>g.cat==='grinder'?g.kind==='hand':null],
+ [/\belectric\b/,'Electric',g=>g.cat==='grinder'?g.kind!=='hand':g.cat==='kettle'?!!g.electric:null],
+ [/\bquiet\b/,'Quiet',g=>g.cat==='grinder'?g.kind==='hand':null],
+ [/\bsingle[- ]?dos(e|ing)\b/,'Single dose',g=>g.cat==='grinder'?(g.kind!=='hand'&&g.kind!=='hopper'):null],
+ [/\b(compact|small|tiny)\b/,'Compact',g=>g.cat==='espresso'?g.w===1:null],
+ [/\b(easy|simple|automatic)\b/,'Easy to use',g=>g.cat==='espresso'?(g.kind==='super'||g.effort===1||!!g.builtIn):null],
+ [/\b(gooseneck|stovetop)\b/,'Gooseneck',g=>g.cat==='kettle'?true:null],
+ [/\btimer\b/,'With timer',g=>g.cat==='scale'?!!g.timer:null],
+ [/\blight\b/,'Light roast',g=>g.cat==='bean'?g.roast==='light':null],
+ [/\bmedium\b/,'Medium roast',g=>g.cat==='bean'?g.roast==='medium':null],
+ [/\bdark\b/,'Dark roast',g=>g.cat==='bean'?g.roast==='dark':null],
+ [/\b(fruity|fruit|bright)\b/,'Fruity',g=>g.cat==='bean'?g.flavor==='fruity':null],
+ [/\b(chocolate|chocolatey|chocolaty|nutty)\b/,'Chocolatey',g=>g.cat==='bean'?g.flavor==='choc':null],
+ [/\bsweet\b/,'Sweet',g=>g.cat==='bean'?g.flavor==='sweet':null]];
+const CHEAP={espresso:500,grinder:200,brewer:50,kettle:100,scale:60,bean:20};
+function parseQuery(text){
+  let t=' '+text.toLowerCase().replace(/[’']/g,"'")+' ';
+  const q={chips:[],cats:new Set(),rules:[],max:null,words:[]};
+  let m=t.match(/(?:under|below|less than|max|up to|<)\s*\$?\s*(\d[\d,]*)/)||t.match(/\$\s*(\d[\d,]*)/);
+  if(m){q.max=Number(m[1].replace(/,/g,''));q.chips.push('Under '+money(nice(q.max)));t=t.replace(m[0],' ')}
+  if(/\b(cheap|budget|affordable|inexpensive)\b/.test(t)){q.cheap=true;q.chips.push('Budget');t=t.replace(/\b(cheap|budget|affordable|inexpensive)\b/g,' ')}
+  for(const [re,label,fn] of KW)if(re.test(t)){q.rules.push(fn);q.chips.push(label);t=t.replace(new RegExp(re.source,'g'),' ')}
+  for(const [re,label,cat] of CAT_WORDS)if(re.test(t)){q.cats.add(cat);q.chips.push(label);t=t.replace(new RegExp(re.source,'g'),' ')}
+  // anything left: brand, product, roaster or origin names, kept only if something in the catalog has them
+  q.words=t.split(/[^a-z0-9\-]+/).filter(w=>w.length>2&&!STOP.has(w)&&GEAR.some(g=>hay(g).includes(w)));
+  q.words.forEach(w=>q.chips.push('“'+w+'”'));
+  return q.chips.length?q:null;
+}
+const hay=g=>(g._hay||(g._hay=[g.name,g.brand,g.roaster,g.origin].join(' ').toLowerCase()));
+function matchQuery(q,g){
+  if(q.cats.size&&!q.cats.has(g.cat))return false;
+  for(const r of q.rules){if(r(g)!==true)return false}
+  if(q.max!=null&&(g.price||0)>q.max)return false;
+  if(q.cheap&&(g.price||0)>(CHEAP[g.cat]||1e9))return false;
+  for(const w of q.words)if(!hay(g).includes(w))return false;
+  return true;
+}
+let qTimer=null;
+function setQuery(text){
+  const q=text.trim()?parseQuery(text):null;
+  if(JSON.stringify(q&&q.chips)===JSON.stringify(QUERY&&QUERY.chips))return;
+  QUERY=q;
+  if(S.view!=='home'&&q)location.hash='';else drawAll(true);
+  renderSide();
 }
 function chipsHtml(c,sel){
   const opts=c.groups.flat(), on=opts.filter(o=>sel.includes(o[0])), off=opts.filter(o=>!sel.includes(o[0]));
@@ -634,10 +762,10 @@ function renderCat(c,fresh){
   const sel=S.filters[c.key]||[];
   list=filtered(c,sel);
   if(fresh||!main.querySelector('#pgrid'))limit=PAGE;
-  main.innerHTML=`<div class="cat-h"><a class="backl" href="#">← All products</a>
+  main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#">← All products</a>
     <div class="cat-row"><h1 class="cat-t">${c.label}</h1><div class="chips" role="group" aria-label="Filter ${c.label.toLowerCase()}">${chipsHtml(c,sel)}</div></div>
     ${(LOAD==='ready'||LOAD==='stale')&&!(c.key==='beans'&&BEANS_LOADING)?`<p class="count">${list.length.toLocaleString('en-US')} ${list.length===1?'product':'products'}</p>`:''}</div>
-    <div class="pgrid" id="pgrid"></div>`;
+    <div class="pgrid" id="pgrid"></div></div>`;
   drawGrid();
 }
 function drawGrid(){
@@ -646,21 +774,19 @@ function drawGrid(){
     :`<p class="empty">${LOAD==='ready'||LOAD==='stale'?'Nothing matches all of these filters. Remove one to see more.':loadingMsg(CATS.find(c=>c.key===S.view))}</p>`;
 }
 main.addEventListener('click',e=>{
-  const up=e.target.closest('[data-unpill]');
-  if(up){const k=up.dataset.cat;S.filters[k]=(S.filters[k]||[]).filter(x=>x!==up.dataset.unpill);save();refreshFilters([k]);return}
   const o=e.target.closest('[data-open]');if(o){openProduct(o.dataset.open);return}
   const ch=e.target.closest('[data-chip]');
   if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
     sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
     S.filters[c.key]=sel;save();renderCat(c,true);main.querySelector(`[data-chip="${id}"]`)?.focus();return}
   if(e.target.closest('a'))return;
-  const s=e.target.closest('[data-go]');if(s)go(s.dataset.go);
+  const s=e.target.closest('[data-go]');if(s)go(s.dataset.go,s.dataset.f?[...new Set([...s.dataset.f.split(','),...(S.filters[s.dataset.go]||[])])]:undefined);
 });
+main.addEventListener('keydown',e=>{const s=e.target.closest&&e.target.closest('.bento[data-go]');if(s&&e.target===s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();s.click()}});
 main.addEventListener('scroll',()=>{
   if(S.view==='home'||limit>=list.length)return;
   if(main.scrollTop+main.clientHeight>main.scrollHeight-main.clientHeight){limit+=PAGE;drawGrid()}
 },{passive:true});
-new ResizeObserver(()=>fillThumbs()).observe(main);
 
 /* ---------- setup assistant: follows the conversation tree ---------- */
 const STEPS={
@@ -705,7 +831,7 @@ function undoTo(k){const a=A(),steps=order(a);steps.slice(steps.indexOf(k)).forE
 function startOver(){S.chat={};picks=new Set();LOG=[];save();applyChat();renderSide()}
 function chatFilters(a){
   const f={}, d=a.drinks||[];
-  if(a.easy)f.espresso=['guided'];else{const e=[];if(a.hands)e.push(a.hands);if(d.includes('milk'))e.push('milk');if(e.length)f.espresso=e}
+  if(a.easy)f.espresso=['easy'];else{const e=[];if(a.hands)e.push(a.hands==='guided'?'easy':a.hands);if(d.includes('milk'))e.push('milk');if(e.length)f.espresso=e}
   if(a.brew)f.brewers=[a.brew];
   if(a.grinder==='no')f.grinders=grinderFilters(a);
   if(d.length||a.easy){const esp=wantsEsp(a),fil=wantsFil(a);if(esp!==fil)f.beans=[esp?'forEsp':'forFil']}
@@ -748,7 +874,7 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<h3 class="qh">Your coffee setup, dialled in for less</h3><p class="qs" style="margin:0">For home baristas and café owners. Find the right gear and beans, keep track of what you own, and catch the deals, so every cup is great without overspending.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
+  if(k==='drinks')return `<h3 class="qh">Find the perfect coffee gear for your home or café</h3><p class="qs" style="margin:0">Tell me what you need, or start with a question.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}
     <button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button><button data-ans="drinks" data-v="easy">Not sure, just make it easy</button></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
@@ -772,7 +898,7 @@ function renderSide(){
   h+=LOG.map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot">${m.html}</div>`).join('');
   thread.innerHTML=h;
   const n=S.setup.filter(byId).length;
-  sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
+  sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${QUERY?'<button class="chip" data-clearq>Clear search</button>':''}${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
   thread.scrollTop=thread.scrollHeight;
 }
 document.getElementById('side').addEventListener('click',e=>{
@@ -783,6 +909,7 @@ document.getElementById('side').addEventListener('click',e=>{
   if(t.dataset.undo){undoTo(t.dataset.undo);return}
   if(t.dataset.open){openProduct(t.dataset.open);return}
   if('save' in t.dataset){const r=suggest(A());S.setup=[...new Set([...S.setup,...r.items.map(x=>x.id)])];save();toast('Saved to your setup');renderSide();return}
+  if('clearq' in t.dataset){document.getElementById('chatIn').value='';setQuery('');return}
   if('restart' in t.dataset){startOver();return}
   if(t.dataset.cur){S.cur=t.dataset.cur;save();LOG.push({html:`Prices are now in ${esc(S.cur)}.`});renderMain(false);renderSide();return}
   if(t.dataset.say){reply(t.dataset.say==='setup'?'What’s in my setup?':'Change currency');return}
@@ -801,16 +928,17 @@ function reply(text){
   else{
     const words=low.split(/\s+/).filter(w=>w.length>2);
     const hits=GEAR.filter(it=>{const t=[it.name,it.brand,it.roaster,it.origin,sub(it)].join(' ').toLowerCase();return t.includes(low)||words.length&&words.every(w=>t.includes(w))}).sort(byPop).slice(0,4);
-    LOG.push({html:hits.length?`Here’s what I found in the catalog for “${esc(q)}”:${kitHtml(hits,false)}`:`I couldn’t find “${esc(q)}” in the catalog. Try a product name, brand or roaster.`});
+    const pq=parseQuery(q);QUERY=pq;drawAll(true);
+    const n=pq?GEAR.filter(g=>matchQuery(pq,g)).length:0;
+    LOG.push({html:pq?`Looking for<div>${pq.chips.map(c=>`<span class="kw">${esc(c)}</span>`).join('')}</div><p class="past" style="margin-top:8px">${n?`${fmtN(n)} ${n===1?'product fits':'products fit'}. They’re shown in the groups on the right.`:'Nothing in the catalog fits all of that yet. Remove a word to see more.'}</p>`
+      :hits.length?`Here’s what I found in the catalog for “${esc(q)}”:${kitHtml(hits,false)}`:`I couldn’t match “${esc(q)}” to anything yet. Try a product type, a brand, or a budget like “under $300”.`});
   }
   renderSide();
 }
-document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('chatIn');reply(i.value);i.value=''});
+document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();clearTimeout(qTimer);const i=document.getElementById('chatIn');reply(i.value);i.value=''});
+document.getElementById('chatIn').addEventListener('input',e=>{clearTimeout(qTimer);const v=e.target.value;qTimer=setTimeout(()=>setQuery(v),300)});
 
 /* ---------- open and close the assistant ---------- */
-function setSide(open){S.side=open;save();app.classList.toggle('closed',!open);if(open)setTimeout(()=>thread.querySelector('button,[tabindex]')?.focus(),60);else document.getElementById('openSide').focus()}
-document.getElementById('openSide').onclick=()=>setSide(true);
-document.getElementById('closeSide').onclick=()=>setSide(false);
 document.querySelector('.send').innerHTML=ico('send');
 const sWrap=document.getElementById('search'), sIn=document.getElementById('searchIn'), sBtn=document.getElementById('searchBtn'), sDrop=document.getElementById('sdrop');
 sBtn.innerHTML=ico('search');
@@ -831,9 +959,8 @@ sIn.addEventListener('focus',()=>{if(sIn.value.trim())sDrop.hidden=false});
 document.getElementById('aboutBtn').onclick=openAbout;
 document.getElementById('signBtn').onclick=async()=>{if(SESSION){await SB.auth.signOut();toast('Signed out')}else openSignIn()};
 function renderSign(){document.getElementById('signBtn').textContent=SESSION?'Sign out':'Sign in'}
-if(phoneMQ.matches)S.side=false;
 lastChat=S.chatFilters||{};
-app.classList.toggle('closed',!S.side);
+
 
 function openSearch(){
   openModal(`<input class="sinput" id="sq" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><div class="sres" id="sres"></div>`);
