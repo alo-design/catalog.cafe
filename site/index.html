@@ -16,7 +16,7 @@
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --icon-inactive:var(--grey-400);
   --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-25); --surface-sunken:var(--grey-200);
-  --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --text-highlight:var(--blue-600); --overlay-scrim:rgba(17,17,17,.32);
+  --border-subtle:var(--grey-200); --border-control:var(--grey-400); --action-primary:var(--grey-900); --accent:var(--bronze-600); --text-highlight:var(--blue-600); --overlay-scrim:rgba(17,17,17,.32);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-control:0 1px 4px rgba(17,17,17,.10);
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
@@ -28,7 +28,7 @@
 :root[data-theme="dark"]{
   --text-primary:var(--grey-50); --text-secondary:var(--grey-400); --text-on-action:var(--grey-900); --text-on-accent:var(--grey-900); --icon-inactive:var(--grey-500);
   --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-hover-subtle:var(--grey-825); --surface-sunken:var(--grey-700);
-  --border-subtle:var(--grey-700); --action-primary:var(--grey-50); --accent:var(--bronze-300); --text-highlight:var(--blue-300); --overlay-scrim:rgba(0,0,0,.55);
+  --border-subtle:var(--grey-700); --border-control:var(--grey-500); --action-primary:var(--grey-50); --accent:var(--bronze-300); --text-highlight:var(--blue-300); --overlay-scrim:rgba(0,0,0,.55);
   --shadow-raised:0 12px 48px rgba(0,0,0,.45); --shadow-control:0 1px 4px rgba(0,0,0,.45); color-scheme:dark}
 
 [hidden]{display:none!important}
@@ -296,6 +296,28 @@ button.me{cursor:pointer}
 .top2 .search{flex-direction:row-reverse}
 .top2 .sdrop{left:auto;right:0}
 
+/* ---------- 2026-11-23 pass 3: page and chat on surface-page, products lighter on surface-raised ---------- */
+body,.app{background:var(--surface-page)!important}
+.main{background:var(--surface-raised)}
+.bento{background:var(--surface-raised);box-shadow:inset 0 0 0 1px var(--border-subtle)}
+.ans button{border-bottom-color:var(--surface-control-hover)}
+@media (hover:hover){.ans button:hover{background:var(--surface-raised)}}
+.me{background:var(--surface-raised)}
+.box{background:var(--surface-raised)}
+.top2 .search.open{background:var(--surface-raised)}
+
+/* answer rows: inset hairlines, rounded hover fill with room around the text */
+.ans{margin:var(--gap-tight) calc(var(--gap-controls) * -1) 0}
+.ans button,.ans button:first-child,.ans button:last-child{position:relative;border:0;border-radius:var(--radius-compact);padding:10px var(--gap-controls)}
+.ans button+button::before{content:"";position:absolute;left:var(--gap-controls);right:var(--gap-controls);top:0;height:1px;background:var(--surface-control-hover)}
+@media (hover:hover){.ans button:hover::before,.ans button:hover+button::before{opacity:0}}
+
+/* chat stays closed until the visitor asks for it */
+.chatcol:not(.chat-on) .side-f{display:none}
+.ans-acts .acts{display:flex;gap:var(--gap-tight)}
+.ans-acts .ghost{height:32px;padding:0 14px;border-radius:var(--radius-compact);border:1px solid var(--border-control);background:none;color:var(--text-primary);font-size:13px}
+@media (hover:hover){.ans-acts .ghost:hover{background:var(--surface-control-hover)}}
+.chatcol.chat-on .ans-acts .ghost{display:none}
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
 @keyframes fade{from{opacity:0}}
@@ -881,7 +903,7 @@ main.addEventListener('scroll',()=>{
 
 /* ---------- setup assistant: follows the conversation tree ---------- */
 const STEPS={
-  drinks:{q:'What do you like to drink?',sub:'Pick all that apply',multi:true,
+  drinks:{q:'What drinks do you plan on making?',sub:'Pick all that apply',multi:true,
     o:[['espresso','Espresso'],['milk','Lattes & cappuccinos'],['americano','Americano'],['filter','Pour-over or drip'],['unsure','Not sure']]},
   hands:{q:'How hands-on do you want to be?',o:[['lever','Manual lever','Pull every shot by hand'],['semi','Semi-automatic','You start and stop the shot'],['guided','Let the machine help','Built-in grinder or automatic milk']]},
   brew:{q:'How do you like to brew?',o:[['pourover','Pour-over'],['immersion','Immersion, like an AeroPress'],['press','French press'],['machine','Drip machine']]},
@@ -967,10 +989,11 @@ function stepHtml(k,a){
   const st=STEPS[k];
   if(k==='drinks')return `<h3 class="qh">Browse coffee essentials or plan your café setup</h3><p class="qsmall">${st.q}</p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
-    <div class="ans-acts"><span></span><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></div>`;
+    <div class="ans-acts"><span></span><span class="acts"><button class="ghost" data-chat>Chat</button><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></span></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
-  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh">${st.q}</h3>${opts}<p class="hint">${st.hint}</p></div>`;
-  return `<h3 class="qh">${st.q}</h3>${opts}`;
+  const acts=`<div class="ans-acts"><span></span><span class="acts"><button class="ghost" data-chat>Chat</button></span></div>`;
+  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh">${st.q}</h3>${opts}<p class="hint">${st.hint}</p>${acts}</div>`;
+  return `<h3 class="qh">${st.q}</h3>${opts}${acts}`;
 }
 function renderSide(){
   const a=A(), steps=order(a);let h='';
@@ -994,6 +1017,7 @@ function renderSide(){
 }
 document.getElementById('side').addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
+  if('chat' in t.dataset){const side=document.getElementById('side');side.classList.add('chat-on');document.getElementById('chatIn').focus();thread.scrollTop=thread.scrollHeight;return}
   if(t.dataset.pick){const v=t.dataset.pick;if(picks.has(v))picks.delete(v);else if(v==='unsure')picks=new Set(['unsure']);else{picks.delete('unsure');picks.add(v)}renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
   if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v.includes('unsure')?'easy':v)}return}
   if(t.dataset.ans){answer(t.dataset.ans,t.dataset.v);return}
