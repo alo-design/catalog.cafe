@@ -12,11 +12,11 @@
 /* Tokens mirror the catalog.cafe design system. Primitives first, then semantic roles. Components use semantic tokens only. */
 :root{
   --grey-0:#ffffff; --grey-25:#fafafa; --grey-50:#f5f5f5; --grey-100:#f0f0f0; --grey-150:#e8e8e8; --grey-200:#e2e2e2; --grey-400:#a0a0a0; --grey-500:#6b6b6b;
-  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-825:#212121; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c;
+  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-825:#212121; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c; --blue-300:#6ea6f7; --blue-600:#0951b9;
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --icon-inactive:var(--grey-400);
   --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-25); --surface-sunken:var(--grey-200);
-  --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --overlay-scrim:rgba(17,17,17,.32);
+  --border-subtle:var(--grey-200); --action-primary:var(--grey-900); --accent:var(--bronze-600); --text-highlight:var(--blue-600); --overlay-scrim:rgba(17,17,17,.32);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-control:0 1px 4px rgba(17,17,17,.10);
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
@@ -28,7 +28,7 @@
 :root[data-theme="dark"]{
   --text-primary:var(--grey-50); --text-secondary:var(--grey-400); --text-on-action:var(--grey-900); --text-on-accent:var(--grey-900); --icon-inactive:var(--grey-500);
   --surface-page:var(--grey-900); --surface-raised:var(--grey-850); --surface-control:var(--grey-800); --surface-control-hover:var(--grey-750); --surface-hover-subtle:var(--grey-825); --surface-sunken:var(--grey-700);
-  --border-subtle:var(--grey-700); --action-primary:var(--grey-50); --accent:var(--bronze-300); --overlay-scrim:rgba(0,0,0,.55);
+  --border-subtle:var(--grey-700); --action-primary:var(--grey-50); --accent:var(--bronze-300); --text-highlight:var(--blue-300); --overlay-scrim:rgba(0,0,0,.55);
   --shadow-raised:0 12px 48px rgba(0,0,0,.45); --shadow-control:0 1px 4px rgba(0,0,0,.45); color-scheme:dark}
 
 [hidden]{display:none!important}
@@ -70,7 +70,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sec-h{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);min-height:24px;margin-bottom:var(--gap-controls)}
 .sec-t{margin:0;font-size:17px;font-weight:400}
 .sec-l{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-stack);min-width:0}
-.sec-arrow{width:18px;height:18px;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .2s ease}
+.sec-arrow{width:18px;height:18px;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .45s cubic-bezier(.34,1.56,.64,1),color .25s ease}
+/* title hover: letters step up to Medium and turn blue one after another, while the title slings a few pixels right */
+.sec-t a{display:inline-block;color:inherit;text-decoration:none;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.sec-t .ch{transition:font-weight .18s ease,color .25s ease;transition-delay:calc(var(--i) * 22ms)}
+@media (hover:hover){
+  .sec:hover .sec-t a{transform:translateX(4px)}
+  .sec:hover .sec-t .ch{font-weight:500;color:var(--text-highlight)}
+  .sec:hover .sec-arrow{color:var(--text-highlight);transform:translateX(4px)}
+}
+.sec:focus-within .sec-t .ch{font-weight:500;color:var(--text-highlight)}
 .sec:hover .sec-arrow,.sec:focus-within .sec-arrow{opacity:1;transform:none}
 @media (hover:none){.sec-arrow{opacity:1;transform:none}}
 .sec-pills{display:flex;flex-wrap:wrap;gap:var(--gap-stack);margin-left:var(--gap-tight)}
@@ -553,7 +562,7 @@ function filtered(c,sel){
   if(!sel||!sel.length)return items(c);
   return items(c).filter(g=>c.groups.every(gr=>{const on=gr.filter(o=>sel.includes(o[0]));return !on.length||on.some(o=>o[2](g))}));
 }
-const loadingMsg=()=>LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.':LOAD==='loading'?'Loading the catalog…':'Nothing here yet.';
+const loadingMsg=c=>c&&c.key==='beans'&&BEANS_LOADING&&LOAD!=='offline'?'Loading beans…':LOAD==='offline'?'The catalog couldn’t load. Refresh the page to try again.':LOAD==='loading'?'Loading the catalog…':'Nothing here yet.';
 let limit=0, list=[];
 const PAGE=60;
 function renderMain(fresh){
@@ -562,7 +571,7 @@ function renderMain(fresh){
 }
 function renderHome(){
   main.innerHTML=CATS.map(c=>`<section class="sec" data-go="${c.key}" aria-labelledby="t-${c.key}">
-    <div class="sec-h"><div class="sec-l"><h2 class="sec-t" id="t-${c.key}"><a href="#${c.key}" style="color:inherit;text-decoration:none">${c.label}</a></h2><svg class="ic sec-arrow" viewBox="0 0 24 24" aria-hidden="true">${ICONS.right}</svg><span class="sec-pills" data-pills="${c.key}"></span></div></div>
+    <div class="sec-h"><div class="sec-l"><h2 class="sec-t" id="t-${c.key}"><a href="#${c.key}" aria-label="${c.label}">${[...c.label].map((ch,i)=>`<span class="ch" style="--i:${i}" aria-hidden="true">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}</a></h2><svg class="ic sec-arrow" viewBox="0 0 24 24" aria-hidden="true">${ICONS.right}</svg><span class="sec-pills" data-pills="${c.key}"></span></div></div>
     <div class="thumbs" data-thumbs="${c.key}"></div></section>`).join('');
   fillThumbs();
 }
@@ -588,7 +597,7 @@ function drawSection(c,animate){
     const {all,show,n,more}=sectionItems(c), ids=new Set(show.map(x=>x.id));
     el.style.setProperty('--cols',n);
     const first=new Map();if(animate&&!reduce)old.forEach((b,id)=>{if(ids.has(id)&&b.isConnected)first.set(id,b.getBoundingClientRect())});
-    if(!all.length){el.innerHTML=`<p class="ms" style="grid-column:1/-1">${(LOAD==='ready'||LOAD==='stale')&&items(c).length?'Nothing here matches your answers. Remove a filter to see more.':loadingMsg()}</p>`;return}
+    if(!all.length){el.innerHTML=`<p class="ms" style="grid-column:1/-1">${(LOAD==='ready'||LOAD==='stale')&&items(c).length?'Nothing here matches your answers. Remove a filter to see more.':loadingMsg(c)}</p>`;return}
     const frag=document.createDocumentFragment(), entering=[];
     show.forEach(it=>{let b=old.get(it.id);if(!b){b=thumbEl(it);entering.push(b)}b.getAnimations().forEach(x=>x.cancel());b.style.pointerEvents='';frag.appendChild(b)});
     if(more){const m=document.createElement('a');m.className='tb more';m.href='#'+c.key;m.setAttribute('aria-label',`View all ${all.length.toLocaleString('en-US')} ${c.short}`);m.innerHTML=`${more.toLocaleString('en-US')}<span>more</span>`;frag.appendChild(m)}
@@ -629,14 +638,14 @@ function renderCat(c,fresh){
   if(fresh||!main.querySelector('#pgrid'))limit=PAGE;
   main.innerHTML=`<div class="cat-h"><a class="backl" href="#">← All products</a>
     <div class="cat-row"><h1 class="cat-t">${c.label}</h1><div class="chips" role="group" aria-label="Filter ${c.label.toLowerCase()}">${chipsHtml(c,sel)}</div></div>
-    ${LOAD==='ready'||LOAD==='stale'?`<p class="count">${list.length.toLocaleString('en-US')} ${list.length===1?'product':'products'}</p>`:''}</div>
+    ${(LOAD==='ready'||LOAD==='stale')&&!(c.key==='beans'&&BEANS_LOADING)?`<p class="count">${list.length.toLocaleString('en-US')} ${list.length===1?'product':'products'}</p>`:''}</div>
     <div class="pgrid" id="pgrid"></div>`;
   drawGrid();
 }
 function drawGrid(){
   const g=main.querySelector('#pgrid');if(!g)return;
   g.innerHTML=list.length?list.slice(0,limit).map(it=>`<button class="p" data-open="${esc(it.id)}"><span class="img">${pic(it)}</span><span class="nm">${esc(it.name)}</span></button>`).join('')
-    :`<p class="empty">${LOAD==='ready'||LOAD==='stale'?'Nothing matches all of these filters. Remove one to see more.':loadingMsg()}</p>`;
+    :`<p class="empty">${LOAD==='ready'||LOAD==='stale'?'Nothing matches all of these filters. Remove one to see more.':loadingMsg(CATS.find(c=>c.key===S.view))}</p>`;
 }
 main.addEventListener('click',e=>{
   const up=e.target.closest('[data-unpill]');
@@ -873,7 +882,8 @@ function buyLinks(it,q){
   return `<a class="pri" href="https://www.amazon.com/s?k=${q}&tag=${AFFILIATE.amazonTag}" target="_blank" rel="noopener sponsored">Buy on Amazon <small>↗</small></a>
       <a class="sec" href="https://www.google.com/search?tbm=shop&q=${q}" target="_blank" rel="noopener">Compare other shops <small>↗</small></a>`;
 }
-function openProduct(id){
+async function openProduct(id){
+  await fullBean(id);
   const it=byId(id), q=encodeURIComponent(it.name), inSetup=S.setup.includes(id);
   const rng=it.cat==='grinder'?(()=>{const d=it.does||[];const e=d.includes('espresso'),f=d.includes('filter');const [a,b]=e&&f?[4,96]:e?[4,44]:[30,96];
     return `<div class="range"><div class="tr" role="img" aria-label="Grind range"><i style="left:${a}%;width:${b-a}%"></i></div><div class="lab"><span>Espresso</span><span>Moka</span><span>Pour-over</span><span>Press</span></div></div>`})():'';
@@ -916,24 +926,46 @@ async function boot(){
   if(/[?&]code=/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);
   if(location.hash==='#owner'&&!SESSION)openSignIn();
 }
-async function allRows(table){
-  const out=[];
-  for(let from=0;;from+=1000){
-    const r=await SB.from(table).select('id,doc').order('id').range(from,from+999);
-    if(r.error)return r;
-    out.push(...r.data);
-    if(r.data.length<1000)return {data:out};
-  }
+/* Loading, fastest first: gear (small) draws the page right away, beans follow.
+   Beans come without their long fields (description, notes, links); a product popup fetches those.
+   The last catalog is kept on this device so a return visit draws immediately, then refreshes. */
+const BEAN_FIELDS='id,name:doc->>name,roaster:doc->>roaster,origin:doc->>origin,roast:doc->>roast,for:doc->>for,flavor:doc->>flavor,degree:doc->>degree,price:doc->price,size_g:doc->size_g,img:doc->>img,pop:doc->pop,status:doc->>status,source:doc->>source';
+const CACHE_KEY='cc-catalog-1';
+let BEANS_LOADING=true;
+const asItem=r=>r.doc?{id:r.id,...r.doc}:{...r};
+async function rows(table,cols,count){
+  // pages of 1,000 fetched side by side
+  if(!count){const out=[];for(let f=0;;f+=1000){const r=await SB.from(table).select(cols).order('id').range(f,f+999);if(r.error)return r;out.push(...r.data);if(r.data.length<1000)return {data:out}}}
+  const pages=await Promise.all(Array.from({length:Math.ceil(count/1000)},(_,i)=>SB.from(table).select(cols).order('id').range(i*1000,i*1000+999)));
+  const bad=pages.find(r=>r.error);return bad||{data:pages.flatMap(r=>r.data)};
 }
+async function countOf(table){try{const r=await SB.from(table).select('id',{count:'exact',head:true});return typeof r.count==='number'?r.count:0}catch(e){return 0}}
+function readCache(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c&&c.gear&&c.beans){RAW.gear=c.gear;RAW.beans=c.beans;if(c.fx)FX=c.fx;mergeCatalog();LOAD='stale';BEANS_LOADING=false;return true}}catch(e){}return false}
+function writeCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({at:Date.now(),gear:RAW.gear,beans:RAW.beans,fx:FX}))}catch(e){}}
+function redraw(first){if(first)renderAll(true);else{renderMain(false);renderSide()}}
 async function loadCatalog(first){
+  const cached=first&&readCache();
+  if(cached)redraw(true);
   try{
-    const [g,b,m]=await Promise.all([allRows('gear'),allRows('beans'),SB.from('meta').select('id,doc').eq('id','fx').maybeSingle()]);
-    if(g.error||b.error)throw g.error||b.error;
-    RAW.gear=g.data.map(r=>({id:r.id,...r.doc}));RAW.beans=b.data.map(r=>({id:r.id,...r.doc}));
+    const beansP=countOf('beans').then(n=>rows('beans',BEAN_FIELDS,n));   // starts now, alongside gear
+    const [g,m]=await Promise.all([rows('gear','id,doc'),SB.from('meta').select('id,doc').eq('id','fx').maybeSingle()]);
+    if(g.error)throw g.error;
+    RAW.gear=g.data.map(asItem);
     if(m.data&&m.data.doc&&m.data.doc.rates)FX={USD:1,...m.data.doc.rates};
     mergeCatalog();LOAD='ready';
-  }catch(e){LOAD=GEAR.length?'stale':'offline'}
-  if(first)renderAll(true);else{layout(false);renderSheet();renderSetup()}
+    if(!cached)redraw(first);
+    const b=await beansP;
+    if(b.error)throw b.error;
+    const full=new Map(RAW.beans.filter(x=>x._full).map(x=>[x.id,x]));
+    RAW.beans=b.data.map(asItem).map(x=>full.get(x.id)||x);
+    BEANS_LOADING=false;mergeCatalog();writeCache();
+  }catch(e){LOAD=GEAR.length?'stale':'offline';BEANS_LOADING=false}
+  redraw(first&&!cached&&LOAD==='offline');
+}
+async function fullBean(id){
+  const it=byId(id);if(!it||it.cat!=='bean'||it._full||!SB)return;
+  try{const {data}=await SB.from('beans').select('id,doc').eq('id',id).maybeSingle();
+    if(data&&data.id===id){const x={...asItem(data),_full:true};const i=RAW.beans.findIndex(b=>b.id===id);if(i>=0)RAW.beans[i]=x;mergeCatalog()}}catch(e){}
 }
 async function checkAdmin(){
   isEditor=false;renderSign();
