@@ -21,7 +21,7 @@
 
   --gap-tight:4px; --gap-stack:8px; --gap-controls:12px; --inset-control:16px; --inset-surface:24px; --inset-surface-lg:36px; --gutter-page:24px; --gutter-page-compact:16px;
   --radius-control:999px; --radius-option:14px; --radius-surface:22px;
-  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px; --gap-section:24px; --width-chat:360px; --radius-bento:32px; --radius-container:40px;
+  --radius-section:16px; --radius-thumb:12px; --size-thumb:60px; --gap-thumb:8px; --gutter-page-wide:32px; --width-sidebar:400px; --height-header:72px; --height-footer:44px; --gap-section:24px; --width-chat:360px; --radius-bento:16px; --radius-container:24px; --radius-compact:8px; --height-header:64px;
   --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:light;
 }
@@ -223,6 +223,64 @@ button.me{cursor:pointer}
   .foot{position:static;justify-content:center;flex-wrap:wrap}
 }
 
+/* ---------- 2026-11-23 pass: header on top, calmer radii, three type sizes (24 light, 15, 13) ---------- */
+.app{display:grid!important;grid-template-columns:var(--width-chat) minmax(0,1fr)!important;grid-template-rows:var(--height-header) minmax(0,1fr) auto!important}
+.top2{grid-column:1/-1;display:flex;align-items:center;gap:var(--gap-controls);padding:0 var(--inset-surface) 0 32px}
+.top2 .logo{font-size:15px;letter-spacing:-.01em;margin-right:auto}
+.top2 .search{position:relative;display:flex;align-items:center;width:min(360px,45vw);height:36px;border:1px solid var(--border-subtle);border-radius:var(--radius-compact);padding:0 12px 0 4px}
+.top2 .search-btn{width:32px;height:32px;color:var(--text-secondary);pointer-events:none}
+.top2 .search-btn .ic{width:18px;height:18px}
+.top2 .search input,.top2 .search.open input{flex:1;width:auto;opacity:1;visibility:visible;border:0;padding:0;font-size:15px;transition:none}
+.top2 .sdrop{left:0;right:auto;width:min(420px,calc(100vw - 32px));top:calc(100% + 8px)}
+.chatcol{grid-column:1;grid-row:2;height:auto}
+.chatcol .thread{padding:var(--gap-stack) var(--inset-surface) var(--inset-control) 32px;gap:var(--gap-controls)}
+.chatcol .side-f{padding:var(--gap-stack) var(--inset-surface) 0 var(--inset-surface)}
+.main{grid-column:2;grid-row:2;height:auto!important;padding:0!important;margin:0 var(--inset-surface) 0 0;background:var(--surface-page);border-radius:var(--radius-container);overflow-y:auto}
+.groups,.groups.catpage{background:none;border-radius:0;min-height:0;margin:0;padding:var(--inset-control)}
+.groups.catpage{padding-top:var(--gap-stack)}
+.bentos{gap:var(--inset-control)}
+.bento{border-radius:var(--radius-bento);padding:var(--inset-control) var(--inset-control) var(--gap-stack)}
+.foot{grid-column:2;grid-row:3;position:static!important;justify-content:flex-end;min-height:var(--height-footer);padding:0 var(--inset-surface) 0 0;font-size:13px}
+/* type: 24 light for titles, 15 regular for reading, 13 for supporting text */
+.sec-t{font-size:15px}
+.b-n,.fam-n,.count,.backl,.chip,.p .nm,.b-msg{font-size:13px}
+.cat-t{font-size:24px;letter-spacing:-.02em}
+.cat-h{padding:var(--gap-stack) var(--gap-tight) var(--inset-control)}
+.qh{font-size:24px;line-height:1.25}
+.qs,.past,.qlab,.tune .hint,.ans button small,.kit-row small{font-size:13px;letter-spacing:0;text-transform:none}
+.qsmall,.me,.bot,.ans button,.kit-row b,.kit-row .pz,.kit-tot{font-size:15px}
+.tune .qh{font-size:24px}
+.qs{margin:0}
+.me{border-radius:var(--radius-option)}
+/* answers: no fill, rows split by hairlines; subtle check boxes */
+.ans{gap:0;margin:var(--gap-tight) 0 0}
+.ans button{background:none;border-radius:0;min-height:44px;padding:10px 2px;border-bottom:1px solid var(--border-subtle)}
+.ans button:first-child{border-top:1px solid var(--border-subtle)}
+@media (hover:hover){.ans button:hover{background:var(--surface-hover-subtle)}}
+.box{width:16px;height:16px;border-radius:4px;border:1px solid var(--border-subtle)}
+[aria-pressed="true"] .box{background:var(--action-primary);border-color:var(--action-primary)}
+.ans-acts{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);margin-top:var(--gap-controls)}
+.linkish{border:0;background:none;padding:0;font-size:13px;color:var(--text-secondary);text-align:left}
+@media (hover:hover){.linkish:hover{color:var(--text-primary)}}
+.ans-acts .go{border:0;height:32px;padding:0 14px;border-radius:var(--radius-compact);background:var(--action-primary);color:var(--text-on-action);font-size:13px}
+.ans-acts .go[disabled]{opacity:.35;cursor:default}
+/* chat box like Claude's: a quiet rectangle with a small square send button */
+.chat{flex-direction:column;align-items:stretch;height:auto;gap:var(--gap-stack);border-radius:var(--radius-option);padding:14px 10px 10px 16px;background:var(--surface-raised)}
+.chat input{font-size:15px;padding-right:6px}
+.chat .send{align-self:flex-end;width:32px;height:32px;border-radius:var(--radius-compact);background:var(--surface-control);color:var(--text-secondary)}
+.chat .send .ic{width:18px;height:18px}
+.chat.has-text .send{background:var(--action-primary);color:var(--text-on-action)}
+@media (max-width:760px){
+  .app{display:block!important}
+  .top2{height:var(--height-header);padding:0 var(--gutter-page-compact)}
+  .top2 .search{width:55vw}
+  .chatcol .thread{padding:var(--gap-stack) var(--gutter-page-compact) var(--inset-control)}
+  .chatcol .side-f{padding:0 var(--gutter-page-compact) var(--inset-control)}
+  .main{margin:0 var(--gap-stack);overflow:visible;border-radius:var(--radius-bento)}
+  .groups{padding:var(--gap-stack)}
+  .foot{justify-content:center;padding:var(--gap-stack) var(--gutter-page-compact)}
+}
+
 /* ---------- modal ---------- */
 .scrim{position:fixed;inset:0;background:var(--overlay-scrim);z-index:20;display:flex;align-items:center;justify-content:center;animation:fade .2s;padding:16px}
 @keyframes fade{from{opacity:0}}
@@ -322,25 +380,24 @@ b,strong{font-weight:400}
 </head>
 <body>
 <div class="app" id="app">
+  <header class="top2">
+    <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
+    <button class="review" id="reviewBtn" hidden></button>
+    <div class="search open" id="search"><button class="search-btn" id="searchBtn" aria-label="Search" tabindex="-1"></button><input id="searchIn" type="search" placeholder="Search machines, grinders, beans…" aria-label="Search products" autocomplete="off"><div class="sdrop" id="sdrop" hidden></div></div>
+  </header>
   <aside class="chatcol" id="side" aria-label="Find your setup">
-    <div class="chat-h">
-      <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
-      <button class="review" id="reviewBtn" hidden></button>
-      <div class="search" id="search"><input id="searchIn" type="search" placeholder="Search products…" aria-label="Search products" autocomplete="off"><button class="search-btn" id="searchBtn" aria-label="Search" aria-expanded="false"></button></div>
-      <div class="sdrop" id="sdrop" hidden></div>
-    </div>
     <div class="thread" id="thread"></div>
     <div class="side-f">
-      <div class="sugg" id="sugg"></div>
+      <div class="sugg" id="sugg" hidden></div>
       <form class="chat" id="chat"><input id="chatIn" type="text" placeholder="Tell me what you need…" aria-label="Tell the setup assistant what you need" autocomplete="off"><button class="send" aria-label="Send"></button></form>
     </div>
   </aside>
   <main class="main" id="main" aria-live="polite"></main>
+  <footer class="foot">
+    <button id="aboutBtn">About and affiliate disclosure</button><button id="signBtn">Sign in</button>
+    <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a></span>
+  </footer>
 </div>
-<footer class="foot">
-  <button id="aboutBtn">About and affiliate disclosure</button><button id="signBtn">Sign in</button>
-  <span>Bean data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a></span>
-</footer>
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="/config.js"></script>
@@ -601,10 +658,14 @@ const byPop=(a,b)=>(a.pop||99)-(b.pop||99);
 /* ---------- routing: #grinders opens a category, anything else is home ---------- */
 const app=document.getElementById('app'), main=document.getElementById('main');
 function route(){
-  const h=location.hash.slice(1);
+  const h=decodeURIComponent(location.hash.slice(1));
   if(h==='owner'){openSignIn();return}
-  if(h==='scales'){S.filters.kettles=['scale'];history.replaceState(null,'','#kettles');S.view='kettles'}
-  else S.view=CATS.some(c=>c.key===h)?h:'home';
+  const LEGACY={espresso:'espresso-machines',brewers:'coffee-makers',kettles:'brewing-tools',scales:'brewing-tools',beans:'coffee-beans'};
+  const [a,b]=h.split('/'), fam=GROUPS.find(f=>f.slug===(LEGACY[a]||a));
+  S.fam=null;S.type=null;
+  if(fam&&b){const t=fam.items.find(x=>x.id===b&&!x.empty);if(t){S.view=t.k;S.fam=fam.slug;S.type=t.id;S.filters[t.k]=[...t.f]}else{S.view='fam';S.fam=fam.slug}}
+  else if(fam){S.view='fam';S.fam=fam.slug}
+  else S.view='home';
   save();closeModal();renderMain(true);
 }
 addEventListener('hashchange',route);
@@ -623,51 +684,67 @@ const loadingMsg=c=>c&&c.key==='beans'&&BEANS_LOADING&&LOAD!=='offline'?'Loading
 let limit=0, list=[];
 const PAGE=60;
 function renderMain(fresh){
-  if(S.view==='home')renderHome();else renderCat(CATS.find(c=>c.key===S.view),fresh);
+  if(S.view==='home')renderHome();else if(S.view==='fam')renderFamily(GROUPS.find(f=>f.slug===S.fam));else renderCat(CATS.find(c=>c.key===S.view),fresh);
   if(fresh)main.scrollTop=0;
 }
 /* Home: product groups sorted the way coffee retailers sort them, one bento per group, 3×3 products each. */
 const GROUPS=[
- {fam:'Espresso machines',items:[{t:'Semi-automatic',k:'espresso',f:['semi']},{t:'With a built-in grinder',k:'espresso',f:['grinder']},{t:'Super-automatic',k:'espresso',f:['super']},{t:'Manual and lever',k:'espresso',f:['lever']}]},
- {fam:'Grinders',items:[{t:'Espresso grinders',k:'grinders',f:['electric','espresso']},{t:'Filter grinders',k:'grinders',f:['electric','filter']},{t:'Hand grinders',k:'grinders',f:['hand']}]},
- {fam:'Coffee makers',items:[{t:'Pour-over',k:'brewers',f:['pourover']},{t:'Immersion and AeroPress',k:'brewers',f:['immersion']},{t:'French press',k:'brewers',f:['press']},{t:'Moka pots',k:'brewers',f:['moka']},{t:'Drip coffee makers',k:'brewers',f:['machine']},{t:'Cold brew',k:'brewers',f:['cold']}]},
- {fam:'Brewing tools',items:[{t:'Kettles',k:'kettles',f:['kettle']},{t:'Scales',k:'kettles',f:['scale']},{t:'Paper and metal filters',empty:true}]},
- {fam:'Espresso tools',items:[{t:'Tampers and distribution',empty:true},{t:'Portafilters and baskets',empty:true},{t:'Knock boxes and cleaning',empty:true}]},
- {fam:'Milk',items:[{t:'Milk frothers and jugs',empty:true}]},
- {fam:'Coffee beans',items:[{t:'Light roast',k:'beans',f:['light']},{t:'Medium roast',k:'beans',f:['medium']},{t:'Dark roast',k:'beans',f:['dark']}]}];
+ {fam:'Espresso machines',slug:'espresso-machines',items:[{t:'Semi-automatic',k:'espresso',f:['semi']},{t:'With a built-in grinder',k:'espresso',f:['grinder']},{t:'Super-automatic',k:'espresso',f:['super']},{t:'Manual and lever',k:'espresso',f:['lever']}]},
+ {fam:'Grinders',slug:'grinders',items:[{t:'Espresso grinders',k:'grinders',f:['electric','espresso']},{t:'Filter grinders',k:'grinders',f:['electric','filter']},{t:'Hand grinders',k:'grinders',f:['hand']}]},
+ {fam:'Coffee makers',slug:'coffee-makers',items:[{t:'Pour-over',k:'brewers',f:['pourover']},{t:'Immersion and AeroPress',k:'brewers',f:['immersion']},{t:'French press',k:'brewers',f:['press']},{t:'Moka pots',k:'brewers',f:['moka']},{t:'Drip coffee makers',k:'brewers',f:['machine']},{t:'Cold brew',k:'brewers',f:['cold']}]},
+ {fam:'Brewing tools',slug:'brewing-tools',items:[{t:'Kettles',k:'kettles',f:['kettle']},{t:'Scales',k:'kettles',f:['scale']},{t:'Paper and metal filters',empty:true}]},
+ {fam:'Espresso tools',slug:'espresso-tools',items:[{t:'Tampers and distribution',empty:true},{t:'Portafilters and baskets',empty:true},{t:'Knock boxes and cleaning',empty:true}]},
+ {fam:'Milk',slug:'milk',items:[{t:'Milk frothers and jugs',empty:true}]},
+ {fam:'Coffee beans',slug:'coffee-beans',items:[{t:'Light roast',k:'beans',f:['light']},{t:'Medium roast',k:'beans',f:['medium']},{t:'Dark roast',k:'beans',f:['dark']}]}];
+GROUPS.forEach(f=>f.items.forEach(t=>{t.id=t.empty?t.t.toLowerCase().replace(/\W+/g,'-'):t.f.join('-')}));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let QUERY=null;   // parsed words from the chat box, or null
 const passes=(c,sel,g)=>!sel||!sel.length||c.groups.every(gr=>{const on=gr.filter(o=>sel.includes(o[0]));return !on.length||on.some(o=>o[2](g))});
-function bentoItems(b){
-  const c=CATS.find(x=>x.key===b.k);
-  return filtered(c,b.f).filter(g=>passes(c,S.filters[b.k],g)&&(!QUERY||matchQuery(QUERY,g)));
+function typeItems(t,withQuery=true){
+  if(t.empty)return [];
+  const c=CATS.find(x=>x.key===t.k);
+  return filtered(c,t.f).filter(g=>passes(c,S.filters[t.k],g)&&(!withQuery||!QUERY||matchQuery(QUERY,g)));
 }
+function famItems(fam,withQuery=true){const seen=new Set(),out=[];fam.items.forEach(t=>typeItems(t,withQuery).forEach(g=>{if(!seen.has(g.id)){seen.add(g.id);out.push(g)}}));return out.sort(byPop)}
 const fmtN=n=>n.toLocaleString('en-US');
 function titleHtml(t){return `<span class="lbl">${[...t].map((ch,i)=>`<span class="ch" style="--i:${i}" aria-hidden="true">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}</span>`}
+// every bento on screen: how to list its products, and which catalog filters it depends on
+let BENTOS=[];
+function bentoHtml(i,title,href,empty){
+  return empty?`<article class="bento empty" data-bi="${i}"><div class="b-h"><h3 class="sec-t">${esc(title)}</h3><span class="b-n">0</span></div><div class="b-grid"><p class="b-msg">Coming soon</p></div></article>`
+    :`<article class="bento" data-bi="${i}" data-href="${href}" role="link" tabindex="0" aria-label="${esc(title)}"><div class="b-h"><h3 class="sec-t">${titleHtml(title)}</h3><span class="b-n"></span></div><div class="b-grid"></div></article>`;
+}
 function renderHome(){
-  main.innerHTML=`<div class="groups">${GROUPS.map((fam,fi)=>`<section class="fam" aria-labelledby="fam-${fi}"><div class="fam-h"><h2 id="fam-${fi}">${fam.fam}</h2><span class="fam-n" data-famn="${fi}"></span></div>
-    <div class="bentos">${fam.items.map((b,bi)=>b.empty
-      ?`<article class="bento empty" data-b="${fi}-${bi}"><div class="b-h"><h3 class="sec-t">${esc(b.t)}</h3><span class="b-n">0</span></div><div class="b-grid"><p class="b-msg">Coming soon</p></div></article>`
-      :`<article class="bento" data-b="${fi}-${bi}" data-go="${b.k}" data-f="${b.f.join(',')}" role="link" tabindex="0" aria-label="${esc(b.t)}"><div class="b-h"><h3 class="sec-t">${titleHtml(b.t)}</h3><span class="b-n" aria-live="off"></span></div><div class="b-grid"></div></article>`).join('')}</div></section>`).join('')}</div>`;
+  const ready=LOAD==='ready'||LOAD==='stale', fams=GROUPS.filter(f=>!ready||famItems(f,false).length||(f.slug==='coffee-beans'&&BEANS_LOADING));
+  BENTOS=fams.map(fam=>({empty:false,keys:[...new Set(fam.items.filter(t=>!t.empty).map(t=>t.k))],list:q=>famItems(fam,q)}));
+  main.innerHTML=`<div class="groups"><div class="bentos">${fams.map((fam,i)=>bentoHtml(i,fam.fam,'#'+fam.slug,false)).join('')}</div></div>`;
   drawAll(false);
 }
-function famTotals(){GROUPS.forEach((fam,fi)=>{const ids=new Set();fam.items.forEach(b=>{if(!b.empty)bentoItems(b).forEach(g=>ids.add(g.id))});const el=main.querySelector(`[data-famn="${fi}"]`);if(el)el.textContent=`${fmtN(ids.size)} ${ids.size===1?'product':'products'}`})}
+function renderFamily(fam){
+  const ready=LOAD==='ready'||LOAD==='stale', types=fam.items.filter(t=>!t.empty&&(!ready||typeItems(t,false).length||(t.k==='beans'&&BEANS_LOADING)));
+  BENTOS=types.map(t=>({empty:false,keys:[t.k],list:q=>typeItems(t,q)}));
+  main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#">← All products</a>
+    <div class="cat-row"><h1 class="cat-t">${esc(fam.fam)}</h1></div><p class="count" data-famn></p></div>
+    <div class="bentos">${types.map((t,i)=>bentoHtml(i,t.t,`#${fam.slug}/${t.id}`,false)).join('')}</div></div>`;
+  drawAll(false);
+}
 function drawAll(animate,onlyKeys){
-  if(S.view!=='home')return;
-  GROUPS.forEach((fam,fi)=>fam.items.forEach((b,bi)=>{if(!b.empty&&(!onlyKeys||onlyKeys.includes(b.k)))drawBento(fi,bi,animate)}));
-  famTotals();
+  if(S.view!=='home'&&S.view!=='fam')return;
+  BENTOS.forEach((b,i)=>{if(!b.empty&&(!onlyKeys||b.keys.some(k=>onlyKeys.includes(k))))drawBento(i,animate)});
+  const n=main.querySelector('[data-famn]');
+  if(n){const fam=GROUPS.find(f=>f.slug===S.fam);const c=famItems(fam).length;n.textContent=`${fmtN(c)} ${c===1?'product':'products'}`}
 }
 const timers={};
-function drawBento(fi,bi,animate){
-  const b=GROUPS[fi].items[bi], el=main.querySelector(`[data-b="${fi}-${bi}"]`);if(!el)return;
-  const nEl=el.querySelector('.b-n'), grid=el.querySelector('.b-grid'), key=fi+'-'+bi;
-  const list=bentoItems(b), show=list.slice(0,9), sig=show.map(x=>x.id).join('|')+'#'+list.length;
+function drawBento(idx,animate){
+  const b=BENTOS[idx], el=main.querySelector(`[data-bi="${idx}"]`);if(!el||b.empty)return;
+  const nEl=el.querySelector('.b-n'), grid=el.querySelector('.b-grid'), key=S.view+(S.fam||'')+'-'+idx;
+  const list=b.list(true), show=list.slice(0,9), sig=show.map(x=>x.id).join('|')+'#'+list.length;
   const finish=()=>{
     el.classList.remove('busy');el.classList.toggle('miss',!list.length&&(LOAD==='ready'||LOAD==='stale'));
     nEl.textContent=fmtN(list.length);nEl.dataset.v=list.length;el.dataset.sig=sig;
-    const c=CATS.find(x=>x.key===b.k), total=filtered(c,b.f).length;
+    const total=b.list(false).length, beansWait=b.keys.includes('beans')&&BEANS_LOADING&&LOAD!=='offline';
     grid.innerHTML=show.length?show.map(it=>`<button class="tb2" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
-      :`<p class="b-msg">${!total?(b.k==='beans'&&BEANS_LOADING&&LOAD!=='offline'?'Loading beans…':LOAD==='loading'?'Loading…':LOAD==='offline'?'Couldn’t load':'Coming soon'):'No matches'}</p>`;
+      :`<p class="b-msg">${!total?(beansWait?'Loading beans…':LOAD==='loading'?'Loading…':LOAD==='offline'?'Couldn’t load':'Coming soon'):'No matches'}</p>`;
   };
   clearInterval(timers[key]);
   if(!animate||reduce||el.dataset.sig===sig){finish();return}
@@ -684,14 +761,12 @@ function drawBento(fi,bi,animate){
 // answers in the assistant filter the products where they are
 function refreshFilters(keys){
   if(!keys.length)return;
-  if(S.view==='home'){
+  if(S.view==='home'||S.view==='fam'){
     drawAll(true,keys);
-    const first=GROUPS.flatMap((f,fi)=>f.items.map((b,bi)=>[b,fi,bi])).find(([b])=>keys.includes(b.k));
-    const el=first&&main.querySelector(`[data-b="${first[1]}-${first[2]}"]`);
+    const i=BENTOS.findIndex(b=>b.keys.some(k=>keys.includes(k))), el=i>=0&&main.querySelector(`[data-bi="${i}"]`);
     if(el){const r=el.getBoundingClientRect(),m=main.getBoundingClientRect();if(r.top<m.top||r.top>m.bottom-120)el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'})}
   }else if(keys.includes(S.view))renderCat(CATS.find(c=>c.key===S.view),false);
 }
-
 /* Keyword matching for the chat box: recognised words narrow the bentos as you type.
    Each rule answers true/false for products it applies to and null for products it doesn't (those drop out). */
 const STOP=new Set('a an and the for with to of in on my me i im i\'m want need looking something some good best that is it be can get any like under below less than over around about home cafe café coffee setup make makes making new first beginner one'.split(' '));
@@ -750,7 +825,7 @@ function setQuery(text){
   const q=text.trim()?parseQuery(text):null;
   if(JSON.stringify(q&&q.chips)===JSON.stringify(QUERY&&QUERY.chips))return;
   QUERY=q;
-  if(S.view!=='home'&&q)location.hash='';else drawAll(true);
+  if(S.view!=='home'&&S.view!=='fam'&&q)location.hash='';else drawAll(true);
   renderSide();
 }
 function chipsHtml(c,sel){
@@ -762,8 +837,9 @@ function renderCat(c,fresh){
   const sel=S.filters[c.key]||[];
   list=filtered(c,sel);
   if(fresh||!main.querySelector('#pgrid'))limit=PAGE;
-  main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#">← All products</a>
-    <div class="cat-row"><h1 class="cat-t">${c.label}</h1><div class="chips" role="group" aria-label="Filter ${c.label.toLowerCase()}">${chipsHtml(c,sel)}</div></div>
+  const fam=GROUPS.find(f=>f.slug===S.fam), typ=fam&&fam.items.find(t=>t.id===S.type);
+  main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#${fam?fam.slug:''}">← ${fam?esc(fam.fam):'All products'}</a>
+    <div class="cat-row"><h1 class="cat-t">${typ?esc(typ.t):c.label}</h1><div class="chips" role="group" aria-label="Filter ${c.label.toLowerCase()}">${chipsHtml(c,sel)}</div></div>
     ${(LOAD==='ready'||LOAD==='stale')&&!(c.key==='beans'&&BEANS_LOADING)?`<p class="count">${list.length.toLocaleString('en-US')} ${list.length===1?'product':'products'}</p>`:''}</div>
     <div class="pgrid" id="pgrid"></div></div>`;
   drawGrid();
@@ -780,11 +856,11 @@ main.addEventListener('click',e=>{
     sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
     S.filters[c.key]=sel;save();renderCat(c,true);main.querySelector(`[data-chip="${id}"]`)?.focus();return}
   if(e.target.closest('a'))return;
-  const s=e.target.closest('[data-go]');if(s)go(s.dataset.go,s.dataset.f?[...new Set([...s.dataset.f.split(','),...(S.filters[s.dataset.go]||[])])]:undefined);
+  const s=e.target.closest('[data-href]');if(s)location.hash=s.dataset.href.slice(1);
 });
-main.addEventListener('keydown',e=>{const s=e.target.closest&&e.target.closest('.bento[data-go]');if(s&&e.target===s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();s.click()}});
+main.addEventListener('keydown',e=>{const s=e.target.closest&&e.target.closest('.bento[data-href]');if(s&&e.target===s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();s.click()}});
 main.addEventListener('scroll',()=>{
-  if(S.view==='home'||limit>=list.length)return;
+  if(S.view==='home'||S.view==='fam'||limit>=list.length)return;
   if(main.scrollTop+main.clientHeight>main.scrollHeight-main.clientHeight){limit+=PAGE;drawGrid()}
 },{passive:true});
 
@@ -874,11 +950,11 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<h3 class="qh">Find the perfect coffee gear for your home or café</h3><p class="qs" style="margin:0">Tell me what you need, or start with a question.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
-    <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}
-    <button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button><button data-ans="drinks" data-v="easy">Not sure, just make it easy</button></div>`;
+  if(k==='drinks')return `<h3 class="qh">Find the perfect coffee gear for your home or café</h3><p class="qs">Tell me what you need, or start with a question.</p><p class="qsmall">${st.q} <span>· ${st.sub}</span></p>
+    <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
+    <div class="ans-acts"><button class="linkish" data-ans="drinks" data-v="easy">Not sure? Make it easy</button><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
-  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh" style="font-size:20px">${st.q}</h3>${opts}<p class="hint">${st.hint}</p></div>`;
+  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh">${st.q}</h3>${opts}<p class="hint">${st.hint}</p></div>`;
   return `<h3 class="qh">${st.q}</h3>${opts}`;
 }
 function renderSide(){
@@ -898,7 +974,7 @@ function renderSide(){
   h+=LOG.map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot">${m.html}</div>`).join('');
   thread.innerHTML=h;
   const n=S.setup.filter(byId).length;
-  sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${QUERY?'<button class="chip" data-clearq>Clear search</button>':''}${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
+  sugg.hidden=true;sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${QUERY?'<button class="chip" data-clearq>Clear search</button>':''}${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
   thread.scrollTop=thread.scrollHeight;
 }
 document.getElementById('side').addEventListener('click',e=>{
@@ -935,15 +1011,15 @@ function reply(text){
   }
   renderSide();
 }
-document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();clearTimeout(qTimer);const i=document.getElementById('chatIn');reply(i.value);i.value=''});
-document.getElementById('chatIn').addEventListener('input',e=>{clearTimeout(qTimer);const v=e.target.value;qTimer=setTimeout(()=>setQuery(v),300)});
+document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();clearTimeout(qTimer);const i=document.getElementById('chatIn');reply(i.value);i.value='';e.target.classList.remove('has-text')});
+document.getElementById('chatIn').addEventListener('input',e=>{clearTimeout(qTimer);const v=e.target.value;document.getElementById('chat').classList.toggle('has-text',!!v.trim());qTimer=setTimeout(()=>setQuery(v),300)});
 
 /* ---------- open and close the assistant ---------- */
 document.querySelector('.send').innerHTML=ico('send');
 const sWrap=document.getElementById('search'), sIn=document.getElementById('searchIn'), sBtn=document.getElementById('searchBtn'), sDrop=document.getElementById('sdrop');
 sBtn.innerHTML=ico('search');
-function closeSearch(){sWrap.classList.remove('open');sIn.value='';sDrop.hidden=true;sBtn.setAttribute('aria-expanded','false')}
-sBtn.onclick=()=>{if(!sWrap.classList.contains('open')){sWrap.classList.add('open');sBtn.setAttribute('aria-expanded','true');setTimeout(()=>sIn.focus(),60)}else if(!sIn.value.trim()){closeSearch()}else sIn.focus()};
+function closeSearch(){sIn.value='';sDrop.hidden=true}
+sBtn.onclick=()=>sIn.focus();
 sIn.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSearch();sBtn.focus()}});
 sIn.addEventListener('input',()=>{
   const q=sIn.value.trim().toLowerCase();if(!q){sDrop.hidden=true;return}
@@ -954,7 +1030,7 @@ sIn.addEventListener('input',()=>{
 });
 sDrop.addEventListener('click',e=>{const r=e.target.closest('[data-open]');if(r){openProduct(r.dataset.open);closeSearch()}});
 sDrop.addEventListener('keydown',e=>{const r=e.target.closest('[data-open]');if(r&&e.key==='Enter'){openProduct(r.dataset.open);closeSearch()}});
-document.addEventListener('click',e=>{if(sWrap.contains(e.target))return;if(!sIn.value.trim())closeSearch();else sDrop.hidden=true});
+document.addEventListener('click',e=>{if(sWrap.contains(e.target))return;sDrop.hidden=true});
 sIn.addEventListener('focus',()=>{if(sIn.value.trim())sDrop.hidden=false});
 document.getElementById('aboutBtn').onclick=openAbout;
 document.getElementById('signBtn').onclick=async()=>{if(SESSION){await SB.auth.signOut();toast('Signed out')}else openSignIn()};
