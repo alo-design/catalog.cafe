@@ -70,17 +70,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sec-h{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);min-height:24px;margin-bottom:var(--gap-controls)}
 .sec-t{margin:0;font-size:17px;font-weight:400}
 .sec-l{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-stack);min-width:0}
-.sec-arrow{width:18px;height:18px;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .45s cubic-bezier(.34,1.56,.64,1),color .25s ease}
-/* title hover: letters step up to Medium and turn blue one after another, while the title slings a few pixels right */
-.sec-t a{display:inline-block;color:inherit;text-decoration:none;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
-.sec-t .ch{transition:font-weight .18s ease,color .25s ease;transition-delay:calc(var(--i) * 22ms)}
+.sec-arrow{width:18px;height:18px;opacity:0;transform:translateX(-6px)}
+/* title hover: letters step up to Medium and turn blue one after another while the title slings a few pixels right.
+   Timing matches Figma's Quick spring; leaving the hover resets instantly (no transition on the resting state). */
+.sec-t a{display:inline-block;color:inherit;text-decoration:none}
 @media (hover:hover){
-  .sec:hover .sec-t a{transform:translateX(4px)}
-  .sec:hover .sec-t .ch{font-weight:500;color:var(--text-highlight)}
-  .sec:hover .sec-arrow{color:var(--text-highlight);transform:translateX(4px)}
+  .sec:hover .sec-t a{transform:translateX(4px);transition:transform .3s cubic-bezier(.3,1.45,.6,1)}
+  .sec:hover .sec-t .ch{font-weight:500;color:var(--text-highlight);transition:font-weight .1s ease-out,color .15s ease-out;transition-delay:calc(var(--i) * 12ms)}
+  .sec:hover .sec-arrow{opacity:1;color:var(--text-highlight);transform:translateX(4px);transition:opacity .15s ease-out,transform .3s cubic-bezier(.3,1.45,.6,1)}
 }
 .sec:focus-within .sec-t .ch{font-weight:500;color:var(--text-highlight)}
-.sec:hover .sec-arrow,.sec:focus-within .sec-arrow{opacity:1;transform:none}
+.sec:focus-within .sec-arrow{opacity:1;transform:none}
 @media (hover:none){.sec-arrow{opacity:1;transform:none}}
 .sec-pills{display:flex;flex-wrap:wrap;gap:var(--gap-stack);margin-left:var(--gap-tight)}
 .sec-pills .chip{height:26px}
