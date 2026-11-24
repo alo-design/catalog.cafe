@@ -153,6 +153,8 @@ b,strong{font-weight:400}
 /* ---------- setup assistant (chat column) ---------- */
 .thread{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:var(--gap-controls);padding:var(--gap-stack) var(--inset-surface) var(--inset-control) var(--gutter-page-wide)}
 .qh{margin:0;font-size:var(--font-size-body);font-weight:400;line-height:1.45;text-wrap:pretty}
+/* the column's one title stays a heading; everything under it is chat */
+.side-t{margin:0 0 var(--gap-tight);font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
 .qsmall{margin:var(--gap-stack) 0 0;font-size:var(--font-size-body)}
 .qlab,.past,.hint{margin:0;font-size:var(--font-size-caption);color:var(--text-secondary)}
 .bot{margin:0;font-size:var(--font-size-body)}
@@ -1155,7 +1157,7 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<div class="msg"><p class="qh">Browse coffee essentials or plan your café setup. ${st.q}</p>
+  if(k==='drinks')return `<div class="msg"><p class="qh">${st.q}</p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
     <div class="ans-acts"><span></span><span class="acts"><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></span></div></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
@@ -1168,13 +1170,13 @@ let TYPING=false, lastSeen=0;
 const doneCount=a=>order(a).filter(k=>k==='drinks'?(a.drinks||a.easy):a[k]).length;
 function logHtml(at){return LOG.filter(m=>m.at===at).map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot msg">${m.html}</div>`).join('')}
 function renderSide(){
-  const a=A(), steps=order(a);let h='', n=0, open=false;
+  const a=A(), steps=order(a);let h='<h2 class="side-t">Browse coffee essentials or plan your café setup</h2>', n=0, open=false;
   h+=logHtml(-1);
   for(const k of steps){
     const done=k==='drinks'?(a.drinks||a.easy):a[k];
     if(done){
       const shows=answerPills(k).length;
-      h+=`<p class="bot">${k==='drinks'?'Browse coffee essentials or plan your café setup. ':''}${STEPS[k].q}</p>${shows?`<button class="me" data-show="${k}" title="Show where this filters the products">`:'<p class="me">'}${esc(answerText(k,a))}${shows?'</button>':'</p>'}`;
+      h+=`<p class="bot">${STEPS[k].q}</p>${shows?`<button class="me" data-show="${k}" title="Show where this filters the products">`:'<p class="me">'}${esc(answerText(k,a))}${shows?'</button>':'</p>'}`;
       n++;h+=logHtml(n);continue;
     }
     open=true;
