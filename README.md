@@ -12,7 +12,7 @@ Catalog Cafe (catalog.cafe) is a coffee setup finder: pick a category, answer a 
 - **Hosting:** Netlify project `catalog-cafe`, domain catalog.cafe.
 - **Data:** Supabase project `catalog-cafe`. Tables `gear`, `beans`, `meta` and `news` are public read; `proposals` and `runs` are owner-only.
 - **Owner sign-in:** catalog.cafe/#owner, by emailed link. Owner emails are listed in the `admin_emails` table.
-- **Research agent:** a daily Claude scheduled task ("Catalog.cafe research") that files proposed catalog changes into `proposals` for review on the site.
+- **Research agent:** a daily Claude scheduled task ("Catalog.cafe research", 5:17 am Toronto) that files proposed catalog changes into `proposals` for review on the site, and drafts a news post (at most 2 a run) when it finds new gear.
 
 ## News
 News posts are drafted into `proposals` with `collection: 'news'` (`doc_id` is the URL slug, `data` holds the article, `sources` the links). Signed in as the owner, drafts appear at the top of catalog.cafe/#news and in the review queue. Open one to preview it, then choose Publish or Reject. “Approve all” never publishes news.
