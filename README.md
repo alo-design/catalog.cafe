@@ -20,7 +20,7 @@ News posts are drafted into `proposals` with `collection: 'news'` (`doc_id` is t
 Each post can carry `data.images` (`[{url, alt, caption?, credit}]`): the makers' own product photos. The first is the post's photo in the list and beside the headline; the rest go through the article, one after each paragraph. Photos from hosts listed in `netlify.toml` (`[images] remote_images`, mirrored in `IMG_HOSTS`) are resized by Netlify's image CDN; others load straight from the maker.
 
 ## Publishing
-Pushing to `main` publishes the `site/` folder to catalog.cafe through Netlify.
+Pushing to `main` publishes the `site/` folder to catalog.cafe through Netlify, and each production deploy uses Netlify credits. Work on a branch and open a pull request instead: Netlify builds a free deploy preview (`https://deploy-preview-<PR number>--catalog-cafe.netlify.app`). Merge to `main` when the preview is approved.
 
 ## Design
 The design rules (type, colour, spacing, layout) live in the catalog.cafe design system: https://claude.ai/artifact/Mmh2LT63kWUggRwJxB1RbB
