@@ -89,13 +89,23 @@ b,strong{font-weight:400}
 .b-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-controls);margin-bottom:var(--gap-controls)}
 .sec-t{flex:1;margin:0;min-width:0;font-size:var(--font-size-body);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec-t a,.sec-t .lbl{display:inline-block;color:inherit;text-decoration:none}
-.b-pills{display:flex;flex-wrap:wrap;gap:var(--gap-tight);margin:calc(var(--gap-stack) * -1) 0 var(--gap-controls)}
-.b-pills[hidden]{display:none}
-.chip.sm{height:24px;padding:0 6px 0 10px;flex:none}
-.chip.sm .ic{width:12px;height:12px}
-.chip.flash{animation:pillflash .9s ease}
-@keyframes pillflash{0%,100%{box-shadow:0 0 0 0 transparent}30%{box-shadow:0 0 0 4px var(--surface-control-hover)}}
-@media (prefers-reduced-motion:reduce){.chip.flash{animation:none}}
+/* filtered bento: the count becomes a fraction (matches/all); hovering it opens the Filters popover */
+.b-n.frac{position:relative;z-index:2;margin:-2px -6px -2px 0;padding:2px 6px;border-radius:var(--radius-compact);cursor:pointer;pointer-events:auto}
+.b-n.frac.on{background:var(--surface-control);color:var(--text-primary)}
+@media (hover:hover){.b-n.frac:hover{background:var(--surface-control);color:var(--text-primary)}}
+/* while the bento sorts, the fraction flashes its hover state */
+.bento.busy .b-n.frac{animation:fracflash .6s ease-in-out infinite alternate}
+.b-n.frac.ping{animation:fracflash .3s ease-in-out 4 alternate}
+@keyframes fracflash{from{background:transparent;color:var(--text-secondary)}to{background:var(--surface-control);color:var(--text-primary)}}
+.fpop{position:fixed;z-index:25;width:300px;padding:12px var(--inset-control) var(--inset-control);background:var(--surface-raised);border-radius:var(--radius-option);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle);animation:fade .12s}
+.fpop h2{margin:0 0 var(--gap-controls);font-size:var(--font-size-body);font-weight:400;color:var(--text-primary)}
+.fpop .chips{gap:6px}
+/* filter in the popover: an outline pill; on hover a × slides in from the right with the Quick spring, and leaving resets instantly */
+.fpill{position:relative;height:30px;padding:0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);background:none;display:inline-flex;align-items:center;font-size:var(--font-size-caption);color:var(--text-primary);overflow:hidden}
+.fpill .ic{width:0;height:14px;margin-left:0;opacity:0;transform:translateX(8px);flex:none}
+@media (hover:hover){.fpill:hover,.fpill:focus-visible{padding-right:8px}
+  .fpill:hover .ic,.fpill:focus-visible .ic{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none;transition:width .3s cubic-bezier(.3,1.45,.6,1),margin .3s cubic-bezier(.3,1.45,.6,1),transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}}
+@media (hover:none){.fpill{padding-right:8px}.fpill .ic{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
 .tb2{display:block;width:100%;aspect-ratio:1;border:0;background:none;padding:12%;border-radius:var(--radius-compact)}
@@ -828,6 +838,9 @@ function typeItems(t,withQuery=true){
   const c=CATS.find(x=>x.key===t.k);
   return filtered(c,t.f).filter(g=>passes(c,S.filters[t.k],g)&&(!withQuery||!QUERY||matchQuery(QUERY,g)));
 }
+// everything in a group, ignoring filters: the denominator of a bento's fraction
+function typeAll(t){if(t.empty)return [];const c=CATS.find(x=>x.key===t.k);return filtered(c,t.f)}
+function famAll(fam){const seen=new Set();fam.items.forEach(t=>typeAll(t).forEach(g=>seen.add(g.id)));return seen.size}
 function famItems(fam,withQuery=true){const seen=new Set(),out=[];fam.items.forEach(t=>typeItems(t,withQuery).forEach(g=>{if(!seen.has(g.id)){seen.add(g.id);out.push(g)}}));return out.sort(byPop)}
 const fmtN=n=>n.toLocaleString('en-US');
 function titleHtml(t){return `<span class="lbl">${[...t].map((ch,i)=>`<span class="ch" style="--i:${i}" aria-hidden="true">${ch===' '?'&nbsp;':esc(ch)}</span>`).join('')}</span>`}
@@ -835,17 +848,17 @@ function titleHtml(t){return `<span class="lbl">${[...t].map((ch,i)=>`<span clas
 let BENTOS=[];
 function bentoHtml(i,title,href,empty){
   return empty?`<article class="bento empty" data-bi="${i}"><div class="b-h"><h3 class="sec-t">${esc(title)}</h3><span class="b-n">0</span></div><div class="b-grid"><p class="b-msg">Coming soon</p></div></article>`
-    :`<article class="bento" data-bi="${i}" data-href="${href}" role="link" tabindex="0" aria-label="${esc(title)}"><div class="b-h"><h3 class="sec-t">${titleHtml(title)}</h3><span class="b-n"></span></div><div class="b-pills"></div><div class="b-grid"></div></article>`;
+    :`<article class="bento" data-bi="${i}" data-href="${href}" role="link" tabindex="0" aria-label="${esc(title)}"><div class="b-h"><h3 class="sec-t">${titleHtml(title)}</h3><span class="b-n"></span></div><div class="b-grid"></div></article>`;
 }
 function renderHome(){
   const ready=LOAD==='ready'||LOAD==='stale', fams=GROUPS.filter(f=>!ready||famItems(f,false).length||(f.slug==='coffee-beans'&&BEANS_LOADING));
-  BENTOS=fams.map(fam=>({empty:false,keys:[...new Set(fam.items.filter(t=>!t.empty).map(t=>t.k))],list:q=>famItems(fam,q)}));
+  BENTOS=fams.map(fam=>({empty:false,keys:[...new Set(fam.items.filter(t=>!t.empty).map(t=>t.k))],list:q=>famItems(fam,q),all:()=>famAll(fam)}));
   main.innerHTML=`<div class="groups"><div class="bentos">${fams.map((fam,i)=>bentoHtml(i,fam.fam,'#'+fam.slug,false)).join('')}</div></div>`;
   drawAll(false);
 }
 function renderFamily(fam){
   const ready=LOAD==='ready'||LOAD==='stale', types=fam.items.filter(t=>!t.empty&&(!ready||typeItems(t,false).length||(t.k==='beans'&&BEANS_LOADING)));
-  BENTOS=types.map(t=>({empty:false,keys:[t.k],list:q=>typeItems(t,q)}));
+  BENTOS=types.map(t=>({empty:false,keys:[t.k],list:q=>typeItems(t,q),all:()=>typeAll(t).length}));
   main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#">← All products</a>
     <div class="cat-row"><h1 class="cat-t">${esc(fam.fam)}</h1></div><p class="count" data-famn></p></div>
     <div class="bentos">${types.map((t,i)=>bentoHtml(i,t.t,`#${fam.slug}/${t.id}`,false)).join('')}</div></div>`;
@@ -864,8 +877,7 @@ function drawBento(idx,animate){
   const list=b.list(true), show=list.slice(0,9), sig=show.map(x=>x.id).join('|')+'#'+list.length;
   const finish=()=>{
     el.classList.remove('busy');el.classList.toggle('miss',!list.length&&(LOAD==='ready'||LOAD==='stale'));
-    nEl.textContent=fmtN(list.length);nEl.dataset.v=list.length;el.dataset.sig=sig;
-    const pl=el.querySelector('.b-pills');pl.innerHTML=bentoPills(b.keys);pl.hidden=!pl.innerHTML;
+    nEl.dataset.v=list.length;el.dataset.sig=sig;setCount(nEl,b,list.length);
     const total=b.list(false).length, beansWait=b.keys.includes('beans')&&BEANS_LOADING&&LOAD!=='offline';
     grid.innerHTML=show.length?show.map(it=>`<button class="tb2" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
       :`<p class="b-msg">${!total?(beansWait?'Loading beans…':LOAD==='loading'?'Loading…':LOAD==='offline'?'Couldn’t load':'Coming soon'):'No matches'}</p>`;
@@ -879,7 +891,7 @@ function drawBento(idx,animate){
     i++;
     if(i>=steps){clearInterval(timers[key]);finish();return}
     const v=Math.round(from+(to-from)*(i/steps)+(Math.random()-.5)*Math.abs(to-from)*.15);
-    nEl.textContent=fmtN(Math.max(Math.min(from,to),Math.min(Math.max(from,to),v)));
+    setCount(nEl,b,Math.max(Math.min(from,to),Math.min(Math.max(from,to),v)));
   },170+Math.random()*90);
 }
 // answers in the assistant filter the products where they are
@@ -893,9 +905,39 @@ function refreshFilters(keys){
 }
 /* Selected filters show as pills in the bentos they narrow down; the × removes that one filter. */
 const optLabelOf=(k,v)=>{const c=CATS.find(x=>x.key===k);const o=c&&c.groups.flat().find(o=>o[0]===v);return o?o[1]:v};
-function bentoPills(keys){
-  return keys.flatMap(k=>(S.filters[k]||[]).map(v=>`<button class="chip sm" aria-pressed="true" data-pill="${k}:${esc(v)}" aria-label="Remove filter: ${esc(optLabelOf(k,v))}">${esc(optLabelOf(k,v))}${ico('x')}</button>`)).join('');
+const activeFilters=keys=>keys.flatMap(k=>(S.filters[k]||[]).map(v=>({k,v,label:optLabelOf(k,v)})));
+// a bento's count: a plain number, or "matches/all" as a button when filters narrow it
+function setCount(nEl,b,n){
+  const on=activeFilters(b.keys).length>0;
+  nEl.classList.toggle('frac',on);
+  if(on){nEl.textContent=`${fmtN(n)}/${fmtN(b.all())}`;nEl.setAttribute('role','button');nEl.tabIndex=0;nEl.setAttribute('aria-haspopup','dialog');nEl.setAttribute('aria-label',`${fmtN(n)} of ${fmtN(b.all())} shown. Show filters`)}
+  else{nEl.textContent=fmtN(n);['role','tabindex','aria-haspopup','aria-label'].forEach(a=>nEl.removeAttribute(a))}
 }
+let fpopFor=null, fpopTimer=null;
+function closeFpop(){clearTimeout(fpopTimer);document.getElementById('fpop')?.remove();if(fpopFor)fpopFor.classList.remove('on');fpopFor=null}
+function openFpop(nEl){
+  const art=nEl.closest('.bento'), b=BENTOS[Number(art.dataset.bi)];if(!b)return;
+  const fs=activeFilters(b.keys);if(!fs.length){closeFpop();return}
+  clearTimeout(fpopTimer);
+  let el=document.getElementById('fpop');
+  if(!el||fpopFor!==nEl){closeFpop();el=document.createElement('div');el.className='fpop';el.id='fpop';el.setAttribute('role','dialog');el.setAttribute('aria-label','Filters');document.body.appendChild(el);
+    el.addEventListener('mouseenter',()=>clearTimeout(fpopTimer));el.addEventListener('mouseleave',()=>{fpopTimer=setTimeout(closeFpop,150)})}
+  fpopFor=nEl;nEl.classList.add('on');
+  el.innerHTML=`<h2>Filters</h2><div class="chips">${fs.map(f=>`<button class="fpill" data-unfilter="${f.k}:${esc(f.v)}" aria-label="Remove filter: ${esc(f.label)}">${esc(f.label)}${ico('x')}</button>`).join('')}</div>`;
+  const r=nEl.getBoundingClientRect();el.style.left=Math.max(12,Math.min(r.right-el.offsetWidth+6,innerWidth-el.offsetWidth-12))+'px';el.style.top=(r.bottom+6)+'px';
+}
+main.addEventListener('mouseover',e=>{if(!matchMedia('(hover:hover)').matches)return;const n=e.target.closest('.b-n.frac');if(n)openFpop(n)});
+main.addEventListener('mouseout',e=>{const n=e.target.closest('.b-n.frac');if(n&&fpopFor===n&&!(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('#fpop')))fpopTimer=setTimeout(closeFpop,150)});
+main.addEventListener('keydown',e=>{const n=e.target.closest&&e.target.closest('.b-n.frac');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():(openFpop(n),document.querySelector('#fpop .fpill')?.focus())}},true);
+document.addEventListener('click',e=>{
+  const u=e.target.closest('[data-unfilter]');
+  if(u){const [k,v]=u.dataset.unfilter.split(':'), n=fpopFor;S.filters[k]=(S.filters[k]||[]).filter(x=>x!==v);save();drawAll(true,[k]);if(n&&n.isConnected&&n.classList.contains('frac'))openFpop(n);else closeFpop();return}
+  if(e.target.closest('#fpop'))return;
+  const n=e.target.closest('.b-n.frac');if(n){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():openFpop(n);return}
+  if(fpopFor)closeFpop();
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fpopFor){const n=fpopFor;closeFpop();n.focus()}});
+main.addEventListener('scroll',()=>closeFpop(),{passive:true});
 // the filters one chat answer added, as "key:value" pairs
 function answerPills(k){
   const a=A(), steps=order(a), pre={...a};
@@ -905,14 +947,14 @@ function answerPills(k){
   CHAT_CATS.forEach(c=>(f1[c]||[]).forEach(v=>{if(!(f0[c]||[]).includes(v))out.push(c+':'+v)}));
   return out;
 }
-// clicking an answer in the chat points at the pills it added instead of undoing it
+// clicking an answer in the chat points at the bentos it filtered instead of undoing it: their fraction flashes
 function showAnswer(k){
-  const ids=answerPills(k);if(!ids.length)return;
-  const flash=()=>{const els=ids.map(id=>main.querySelector(`[data-pill="${id}"]`)).filter(Boolean);
-    if(!els.length){toast('That filter was removed from the products');return}
-    els[0].closest('.bento')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
-    els.forEach(el=>{el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')});};
-  if(S.view!=='home'&&S.view!=='fam'){location.hash='';setTimeout(flash,350)}else flash();
+  const keys=[...new Set(answerPills(k).map(id=>id.split(':')[0]))];if(!keys.length)return;
+  const ping=()=>{const els=BENTOS.map((b,i)=>b.keys.some(x=>keys.includes(x))?main.querySelector(`[data-bi="${i}"] .b-n.frac`):null).filter(Boolean);
+    if(!els.length){toast('Those filters were removed from the products');return}
+    els[0].closest('.bento').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
+    els.forEach(el=>{el.classList.remove('ping');void el.offsetWidth;el.classList.add('ping')});};
+  if(S.view!=='home'&&S.view!=='fam'){location.hash='';setTimeout(ping,350)}else ping();
 }
 /* Keyword matching for the chat box: recognised words narrow the bentos as you type.
    Each rule answers true/false for products it applies to and null for products it doesn't (those drop out). */
@@ -1003,8 +1045,6 @@ main.addEventListener('click',e=>{
   if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
     sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
     S.filters[c.key]=sel;save();renderCat(c,true);main.querySelector(`[data-chip="${id}"]`)?.focus();return}
-  const up=e.target.closest('[data-pill]');
-  if(up){const [k,v]=up.dataset.pill.split(':');S.filters[k]=(S.filters[k]||[]).filter(x=>x!==v);save();drawAll(true,[k]);return}
   if(e.target.closest('a'))return;
   const s=e.target.closest('[data-href]');if(s)location.hash=s.dataset.href.slice(1);
 });
