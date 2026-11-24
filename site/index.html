@@ -93,7 +93,7 @@ b,strong{font-weight:400}
 /* the fraction's text lines up with the edge like a plain count: its 12px hover padding hangs into the bento's padding */
 .b-n.frac{position:relative;z-index:2;display:inline-flex;align-items:center;margin:-7px calc(var(--gap-controls) * -1) -7px 0;pointer-events:auto}
 /* like an answer row: no fill at rest; hover is a rounded surface-raised fill with 12px either side of the text */
-.fr-n{height:var(--height-control-sm);padding:0 var(--gap-controls);border:0;border-radius:var(--radius-compact);background:none;font:inherit;color:inherit;cursor:pointer}
+.fr-n{height:var(--height-control-sm);padding:0 var(--gap-controls);border:0;border-radius:var(--radius-control);background:none;font:inherit;color:inherit;cursor:pointer}
 .b-n.frac.on .fr-n{background:var(--surface-raised);color:var(--text-primary)}
 @media (hover:hover){.fr-n:hover{background:var(--surface-raised);color:var(--text-primary)}}
 /* while the bento sorts, the fraction flashes its hover state */
@@ -107,12 +107,17 @@ b,strong{font-weight:400}
 .fpill{height:30px;padding:0 8px 0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);background:none;display:inline-flex;align-items:center;gap:var(--gap-tight);font-size:var(--font-size-caption);color:var(--text-primary)}
 .fpill .ic{width:14px;height:14px;color:var(--text-secondary);flex:none}
 @media (hover:hover){.fpill:hover{background:var(--surface-control)}.fpill:hover .ic{color:var(--text-primary)}}
-/* the x: a 32px circle, as tall as the fraction's fill, just left of it and outside it, so the numbers never move;
-   it slides in from the right on hover with the Quick spring */
-.fr-x{position:absolute;right:calc(100% + var(--gap-tight));top:0;display:grid;place-items:center;width:var(--height-control-sm);height:var(--height-control-sm);padding:0;border:0;border-radius:var(--radius-control);background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);pointer-events:none;cursor:pointer}
+/* the x: a 32px circle, as tall as the fraction's fill, to its right and outside it. On hover it grows in from the right
+   with the Quick spring and pushes the fraction left; leaving resets instantly. It only takes clicks once it has settled,
+   so a click meant for the fraction can't land on it as things move. */
+.fr-x{display:grid;place-items:center;width:0;height:var(--height-control-sm);margin-left:0;padding:0;border:0;border-radius:var(--radius-control);background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);overflow:hidden;visibility:hidden;cursor:pointer}
 .fr-x .ic{width:12px;height:12px;flex:none}
-.b-n.frac.on .fr-x{opacity:1;transform:none;pointer-events:auto}
-@media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{opacity:1;transform:none;pointer-events:auto;transition:transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}
+/* with the x showing, the row hangs 8px into the padding instead of 12, so the circle keeps room from the bento's edge */
+.b-n.frac.on{margin-right:calc(var(--gap-stack) * -1)}
+@media (hover:hover){.b-n.frac:hover{margin-right:calc(var(--gap-stack) * -1)}}
+.b-n.frac.on .fr-x{width:var(--height-control-sm);margin-left:var(--gap-tight);opacity:1;transform:none;visibility:visible}
+@media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{width:var(--height-control-sm);margin-left:var(--gap-tight);opacity:1;transform:none;visibility:visible;
+    transition:width .3s cubic-bezier(.3,1.45,.6,1),margin .3s cubic-bezier(.3,1.45,.6,1),transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out,visibility 0s linear .3s}
   .fr-x:hover{background:var(--surface-raised);color:var(--text-primary)}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
