@@ -89,6 +89,13 @@ b,strong{font-weight:400}
 .b-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-controls);margin-bottom:var(--gap-controls)}
 .sec-t{flex:1;margin:0;min-width:0;font-size:var(--font-size-body);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec-t a,.sec-t .lbl{display:inline-block;color:inherit;text-decoration:none}
+.b-pills{display:flex;flex-wrap:wrap;gap:var(--gap-tight);margin:calc(var(--gap-stack) * -1) 0 var(--gap-controls)}
+.b-pills[hidden]{display:none}
+.chip.sm{height:24px;padding:0 6px 0 10px;flex:none}
+.chip.sm .ic{width:12px;height:12px}
+.chip.flash{animation:pillflash .9s ease}
+@keyframes pillflash{0%,100%{box-shadow:0 0 0 0 transparent}30%{box-shadow:0 0 0 4px var(--surface-control-hover)}}
+@media (prefers-reduced-motion:reduce){.chip.flash{animation:none}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
 .tb2{display:block;width:100%;aspect-ratio:1;border:0;background:none;padding:12%;border-radius:var(--radius-compact)}
@@ -828,7 +835,7 @@ function titleHtml(t){return `<span class="lbl">${[...t].map((ch,i)=>`<span clas
 let BENTOS=[];
 function bentoHtml(i,title,href,empty){
   return empty?`<article class="bento empty" data-bi="${i}"><div class="b-h"><h3 class="sec-t">${esc(title)}</h3><span class="b-n">0</span></div><div class="b-grid"><p class="b-msg">Coming soon</p></div></article>`
-    :`<article class="bento" data-bi="${i}" data-href="${href}" role="link" tabindex="0" aria-label="${esc(title)}"><div class="b-h"><h3 class="sec-t">${titleHtml(title)}</h3><span class="b-n"></span></div><div class="b-grid"></div></article>`;
+    :`<article class="bento" data-bi="${i}" data-href="${href}" role="link" tabindex="0" aria-label="${esc(title)}"><div class="b-h"><h3 class="sec-t">${titleHtml(title)}</h3><span class="b-n"></span></div><div class="b-pills"></div><div class="b-grid"></div></article>`;
 }
 function renderHome(){
   const ready=LOAD==='ready'||LOAD==='stale', fams=GROUPS.filter(f=>!ready||famItems(f,false).length||(f.slug==='coffee-beans'&&BEANS_LOADING));
@@ -858,6 +865,7 @@ function drawBento(idx,animate){
   const finish=()=>{
     el.classList.remove('busy');el.classList.toggle('miss',!list.length&&(LOAD==='ready'||LOAD==='stale'));
     nEl.textContent=fmtN(list.length);nEl.dataset.v=list.length;el.dataset.sig=sig;
+    const pl=el.querySelector('.b-pills');pl.innerHTML=bentoPills(b.keys);pl.hidden=!pl.innerHTML;
     const total=b.list(false).length, beansWait=b.keys.includes('beans')&&BEANS_LOADING&&LOAD!=='offline';
     grid.innerHTML=show.length?show.map(it=>`<button class="tb2" data-open="${esc(it.id)}" aria-label="${esc(it.name)}" title="${esc(it.name)}">${pic(it)}</button>`).join('')
       :`<p class="b-msg">${!total?(beansWait?'Loading beans…':LOAD==='loading'?'Loading…':LOAD==='offline'?'Couldn’t load':'Coming soon'):'No matches'}</p>`;
@@ -882,6 +890,29 @@ function refreshFilters(keys){
     const i=BENTOS.findIndex(b=>b.keys.some(k=>keys.includes(k))), el=i>=0&&main.querySelector(`[data-bi="${i}"]`);
     if(el){const r=el.getBoundingClientRect(),m=main.getBoundingClientRect();if(r.top<m.top||r.top>m.bottom-120)el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'})}
   }else if(keys.includes(S.view))renderCat(CATS.find(c=>c.key===S.view),false);
+}
+/* Selected filters show as pills in the bentos they narrow down; the × removes that one filter. */
+const optLabelOf=(k,v)=>{const c=CATS.find(x=>x.key===k);const o=c&&c.groups.flat().find(o=>o[0]===v);return o?o[1]:v};
+function bentoPills(keys){
+  return keys.flatMap(k=>(S.filters[k]||[]).map(v=>`<button class="chip sm" aria-pressed="true" data-pill="${k}:${esc(v)}" aria-label="Remove filter: ${esc(optLabelOf(k,v))}">${esc(optLabelOf(k,v))}${ico('x')}</button>`)).join('');
+}
+// the filters one chat answer added, as "key:value" pairs
+function answerPills(k){
+  const a=A(), steps=order(a), pre={...a};
+  steps.slice(steps.indexOf(k)).forEach(s=>{delete pre[s];if(s==='drinks')delete pre.easy});
+  const withK={...pre};if(k==='drinks'){if(a.easy)withK.easy=true;else withK.drinks=a.drinks}else withK[k]=a[k];
+  const f0=chatFilters(pre), f1=chatFilters(withK), out=[];
+  CHAT_CATS.forEach(c=>(f1[c]||[]).forEach(v=>{if(!(f0[c]||[]).includes(v))out.push(c+':'+v)}));
+  return out;
+}
+// clicking an answer in the chat points at the pills it added instead of undoing it
+function showAnswer(k){
+  const ids=answerPills(k);if(!ids.length)return;
+  const flash=()=>{const els=ids.map(id=>main.querySelector(`[data-pill="${id}"]`)).filter(Boolean);
+    if(!els.length){toast('That filter was removed from the products');return}
+    els[0].closest('.bento')?.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
+    els.forEach(el=>{el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')});};
+  if(S.view!=='home'&&S.view!=='fam'){location.hash='';setTimeout(flash,350)}else flash();
 }
 /* Keyword matching for the chat box: recognised words narrow the bentos as you type.
    Each rule answers true/false for products it applies to and null for products it doesn't (those drop out). */
@@ -972,6 +1003,8 @@ main.addEventListener('click',e=>{
   if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
     sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
     S.filters[c.key]=sel;save();renderCat(c,true);main.querySelector(`[data-chip="${id}"]`)?.focus();return}
+  const up=e.target.closest('[data-pill]');
+  if(up){const [k,v]=up.dataset.pill.split(':');S.filters[k]=(S.filters[k]||[]).filter(x=>x!==v);save();drawAll(true,[k]);return}
   if(e.target.closest('a'))return;
   const s=e.target.closest('[data-href]');if(s)location.hash=s.dataset.href.slice(1);
 });
@@ -1079,7 +1112,7 @@ function renderSide(){
   const a=A(), steps=order(a);let h='';
   for(const k of steps){
     const done=k==='drinks'?(a.drinks||a.easy):a[k];
-    if(done){h+=`<p class="past">${STEPS[k].q}</p><button class="me" data-undo="${k}" title="Change this answer">${esc(answerText(k,a))}</button>`;continue}
+    if(done){const shows=answerPills(k).length;h+=`<p class="past">${STEPS[k].q}</p>${shows?`<button class="me" data-show="${k}" title="Show where this filters the products">`:'<p class="me">'}${esc(answerText(k,a))}${shows?'</button>':'</p>'}`;continue}
     if(LOAD==='loading'&&k!=='drinks'){h+='<p class="past">Loading the catalog…</p>';break}
     h+=stepHtml(k,a);break;
   }
@@ -1101,7 +1134,7 @@ document.getElementById('side').addEventListener('click',e=>{
   if(t.dataset.pick){const v=t.dataset.pick;if(picks.has(v))picks.delete(v);else if(v==='unsure')picks=new Set(['unsure']);else{picks.delete('unsure');picks.add(v)}renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
   if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v.includes('unsure')?'easy':v)}return}
   if(t.dataset.ans){answer(t.dataset.ans,t.dataset.v);return}
-  if(t.dataset.undo){undoTo(t.dataset.undo);return}
+  if(t.dataset.show){showAnswer(t.dataset.show);return}
   if(t.dataset.open){openProduct(t.dataset.open);return}
   if('save' in t.dataset){const r=suggest(A());S.setup=[...new Set([...S.setup,...r.items.map(x=>x.id)])];save();toast('Saved to your setup');renderSide();return}
   if('clearq' in t.dataset){document.getElementById('chatIn').value='';setQuery('');return}
