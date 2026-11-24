@@ -3,21 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>catalog.cafe</title>
+<title>Catalog Cafe</title>
 <meta name="description" content="Plan your coffee setup: browse espresso machines, grinders, brewers, kettles, scales and beans, and let the setup assistant suggest a kit that fits your budget.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
-/* catalog.cafe — one stylesheet, one rule per component. Mirrors the catalog.cafe design system:
+/* Catalog Cafe — one stylesheet, one rule per component. Mirrors the Catalog Cafe design system:
    primitives first, then semantic roles; component rules use semantic tokens only.
-   Type: 24 Light for the one title per view, 15 for reading, 13 for supporting text.
+   Type: 24 Light for the one title per view, 15 for reading, 13 for supporting text, 10 for news dates and sources (13 on phones).
+   Medium (500) only for news labels and the bento-title hover.
    Radii: compact (8) for small controls and rows, option (16) for cards and panels, surface (24) for the
    product container and modals, control (pill) for pills and round buttons. */
 :root{
   --grey-0:#ffffff; --grey-25:#fafafa; --grey-50:#f5f5f5; --grey-100:#f0f0f0; --grey-150:#e8e8e8; --grey-200:#e2e2e2; --grey-400:#a0a0a0; --grey-500:#6b6b6b;
-  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-825:#212121; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c; --blue-300:#6ea6f7; --blue-600:#0951b9;
+  --grey-700:#323232; --grey-750:#2f2f2f; --grey-800:#262626; --grey-825:#212121; --grey-850:#1c1c1c; --grey-900:#111111; --bronze-300:#e0a45a; --bronze-600:#96601c; --blue-50:#ebf2fc; --blue-300:#6ea6f7; --blue-600:#0951b9;
 
   --text-primary:var(--grey-900); --text-secondary:var(--grey-500); --text-on-action:var(--grey-0); --text-on-accent:var(--grey-0); --text-highlight:var(--blue-600); --icon-inactive:var(--grey-400);
-  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-25); --surface-sunken:var(--grey-200);
+  --surface-page:var(--grey-50); --surface-raised:var(--grey-0); --surface-control:var(--grey-100); --surface-control-hover:var(--grey-150); --surface-hover-subtle:var(--grey-25); --surface-sunken:var(--grey-200); --surface-highlight:var(--blue-50);
   --border-subtle:var(--grey-200); --border-control:var(--grey-400); --action-primary:var(--grey-900); --accent:var(--bronze-600);
   --overlay-scrim:rgba(17,17,17,.32); --overlay-frost:rgba(245,245,245,.4);
   --shadow-raised:0 12px 48px rgba(17,17,17,.10); --shadow-hover:0 1px 2px rgba(17,17,17,.025),0 4px 12px rgba(17,17,17,.035);
@@ -26,7 +27,7 @@
   --gutter-page:24px; --gutter-page-wide:32px; --gutter-page-compact:16px;
   --radius-compact:8px; --radius-option:16px; --radius-surface:24px; --radius-control:999px;
   --width-chat:360px; --width-search:560px; --height-header:64px; --height-footer:44px; --height-control-sm:32px; --height-row:44px;
-  --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif; --font-size-heading:24px; --font-size-body:15px; --font-size-caption:13px;
+  --font-sans:"Helvetica Neue",Helvetica,Arial,sans-serif; --font-size-heading:24px; --font-size-body:15px; --font-size-caption:13px; --font-size-meta:10px; --font-weight-label:500;
   color-scheme:light;
 }
 /* Light only: there is no dark theme (product photos are shot for light backgrounds). */
@@ -239,6 +240,85 @@ dl.specs dd{text-align:right}
 .prop .acts{display:flex;gap:var(--gap-stack);margin-top:var(--gap-tight)}
 .allbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
 
+/* ---------- news: its own full-width page, no chat column and no container ---------- */
+.app.newsmode{grid-template-columns:minmax(0,1fr);background:var(--surface-raised)}
+.newsmode .chatcol{display:none}
+.newsmode .main{grid-column:1;margin:0;border-radius:0}
+.newsmode .foot{grid-column:1;justify-content:center}
+.news{max-width:600px;margin:0 auto;padding:var(--gap-section) 0 56px}
+.news p,.news li,.news td,.news th{text-wrap:pretty}
+.news h1,.news h2,.news h3{text-wrap:pretty}
+.n-title{margin:var(--gap-section) 0 var(--gap-stack);font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em;line-height:1.25}
+.n-intro{margin:0 0 var(--gap-section);color:var(--text-secondary)}
+.n-label{margin:0 0 var(--gap-controls);font-size:var(--font-size-caption);font-weight:var(--font-weight-label);color:var(--text-primary)}
+.n-label.owner{color:var(--accent)}
+.n-empty{color:var(--text-secondary);font-size:var(--font-size-caption)}
+.n-list{display:flex;flex-direction:column;gap:var(--gap-stack);margin:0 calc(var(--inset-control) * -1) var(--gap-section)}
+/* row: photo tile, headline, dek, then date · sources; hover fills, nothing moves */
+.nrow{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);gap:var(--inset-control);align-items:start;padding:var(--inset-control);border-radius:var(--radius-option)}
+@media (hover:hover){.nrow:hover{background:var(--surface-hover-subtle)}}
+.nrow .th{width:64px;height:64px}
+.nrow a.cover{color:var(--text-primary);text-decoration:none}
+.nrow a.cover::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.nrow h3{margin:0;font-size:var(--font-size-body);font-weight:400;line-height:1.35}
+.nrow .dek{margin:var(--gap-tight) 0 0;font-size:var(--font-size-caption);color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .meta{position:relative;z-index:1;margin-top:var(--gap-stack)}
+/* product photo tile used in rows, headers and the comparison table */
+.th.tile{display:block;padding:8%;border:0;border-radius:var(--radius-option);background:var(--surface-hover-subtle)}
+.th.tile>svg,.th.tile>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
+button.th.tile{cursor:pointer}
+@media (hover:hover){button.th.tile:hover{background:var(--surface-control)}}
+/* date · Sourced from [favicons] */
+.meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:var(--font-size-meta);color:var(--text-secondary)}
+.srcbtn{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:2px 0;font-size:inherit;color:inherit;border-radius:var(--radius-compact)}
+.favs{display:inline-flex;align-items:center}
+.fav{position:relative;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;overflow:hidden;background:var(--surface-control);color:var(--text-primary);font-size:8px;line-height:1;box-shadow:0 0 0 1.5px var(--surface-raised);flex:none}
+.favs .fav+.fav{margin-left:-4px}
+.fav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface-raised);opacity:0}
+.fav img.on{opacity:1}
+@media (hover:hover){.srcbtn:hover{color:var(--text-primary)}}
+/* sources: a popover on click (desktop), a full-screen sheet on phones */
+.srcpop{position:fixed;z-index:25;min-width:240px;max-width:min(360px,calc(100vw - 32px));padding:6px;background:var(--surface-raised);border-radius:var(--radius-compact);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle);animation:fade .12s}
+.srcpop .lbx-head,.srcpop .lbx-sub{display:none}
+.srcrow{display:flex;align-items:center;gap:var(--gap-stack);padding:6px;border-radius:var(--radius-compact);color:var(--text-primary);text-decoration:none;font-size:var(--font-size-caption)}
+.srcrow .fav{width:16px;height:16px;box-shadow:none}
+.srcrow .host{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcrow .go-ic{color:var(--text-secondary)}
+@media (hover:hover){.srcrow:hover{background:var(--surface-page)}}
+/* article */
+.backl.n-back{display:inline-block;margin-top:var(--gap-stack)}
+.ahead{display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--inset-control) 20px;align-items:start;margin:var(--gap-section) 0}
+.ahead .th{width:96px;height:96px;grid-row:1/span 1}
+.ahead h1{margin:0;font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em;line-height:1.25}
+.ahead .dek{margin:var(--gap-stack) 0 0;color:var(--text-secondary)}
+.ahead .meta{margin-top:var(--gap-controls)}
+.short{margin:0 0 32px;padding:var(--inset-control) 20px;border-radius:var(--radius-option);background:var(--surface-highlight)}
+.short ul{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:6px}
+.short li::marker{color:var(--text-secondary)}
+.asec{margin:0 0 32px}
+.asec p{margin:0 0 var(--gap-controls)}
+.ilink{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline dotted;text-decoration-color:var(--text-secondary);text-underline-offset:3px;cursor:pointer}
+@media (hover:hover){.ilink:hover{text-decoration-color:var(--text-primary)}}
+.cmpwrap{overflow-x:auto;overscroll-behavior-x:contain;border:1px solid var(--border-subtle);border-radius:var(--radius-option)}
+table.cmp{width:100%;border-collapse:collapse;table-layout:fixed}
+.cmp th,.cmp td{padding:10px var(--gap-controls);text-align:center;font-size:var(--font-size-body);font-weight:400;vertical-align:middle}
+.cmp thead th{padding-top:var(--inset-control);font-size:var(--font-size-caption)}
+.cmp thead .th{width:56px;height:56px;margin:0 auto 6px;border-radius:var(--radius-compact)}
+.cmp thead .nm{display:block;line-height:1.3}
+.cmp tbody th{text-align:left;font-size:var(--font-size-caption);color:var(--text-secondary);width:108px}
+.cmp tbody tr{border-top:1px solid var(--border-subtle)}
+.cmp .hl{background:var(--surface-hover-subtle)}
+.cmp thead .hl .nm{font-weight:var(--font-weight-label)}
+.cmp thead th:first-child{width:108px}
+.verdict{border-top:1px solid var(--border-subtle)}
+.verdict div{display:grid;grid-template-columns:72px minmax(0,1fr);gap:var(--gap-controls);padding:var(--gap-controls) 0;border-bottom:1px solid var(--border-subtle)}
+.verdict span{color:var(--text-primary)}
+.verdict p{margin:0}
+.draftbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--gap-controls);margin-top:var(--gap-section);padding:var(--gap-controls) var(--inset-control);border:1px solid var(--accent);border-radius:var(--radius-option);font-size:var(--font-size-caption)}
+.draftbar .k{color:var(--accent)}
+.draftbar .acts{display:flex;gap:var(--gap-stack)}
+.prop .acts .pv{background:none;border:1px solid var(--border-control);color:var(--text-primary)}
+
 /* ---------- phone ---------- */
 @media (max-width:760px){
   body{overflow:auto}
@@ -257,6 +337,27 @@ dl.specs dd{text-align:right}
   .modal{max-width:none;max-height:92vh;border-radius:var(--radius-surface) var(--radius-surface) 0 0;padding-bottom:calc(var(--inset-surface) + env(safe-area-inset-bottom,0px))}
   .scrim{align-items:flex-end;padding:0}
   .grab{display:block;width:38px;height:5px;margin:0 auto 6px;border-radius:var(--radius-control);background:var(--surface-sunken)}
+  .news{padding:var(--gap-stack) var(--gutter-page-compact) 40px}
+  .newsmode .main{margin:0}
+  .n-list{margin-left:calc(var(--gap-stack) * -1);margin-right:calc(var(--gap-stack) * -1)}
+  .nrow{padding:var(--gap-controls) var(--gap-stack);grid-template-columns:56px minmax(0,1fr);gap:var(--gap-controls)}
+  .nrow .th{width:56px;height:56px}
+  .nrow .dek{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .meta{font-size:var(--font-size-caption)}
+  .fav{width:20px;height:20px;font-size:9px}
+  /* article on a phone: title first, then the photo across the full width */
+  .ahead{display:flex;flex-direction:column;align-items:stretch;gap:0}
+  .ahead .ahead-t{order:1}
+  .ahead .th{order:2;width:auto;height:240px;margin:var(--gap-section) calc(var(--gutter-page-compact) * -1) 0;border-radius:0;padding:var(--gap-section)}
+  .cmpwrap{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent)}
+  .cmpwrap.end{-webkit-mask-image:none;mask-image:none}
+  table.cmp{width:520px}
+  .srcpop{inset:0;max-width:none;min-width:0;border-radius:0;padding:var(--gap-controls) var(--gutter-page-compact) var(--inset-surface);box-shadow:none;overflow-y:auto}
+  .srcpop .lbx-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-stack)}
+  .srcpop .lbx-head h2{margin:0;font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em}
+  .srcpop .lbx-sub{display:block;margin:0 0 var(--gap-stack);font-size:var(--font-size-caption);color:var(--text-secondary)}
+  .srcrow{min-height:52px;padding:var(--gap-controls) 0;border-radius:0;border-bottom:1px solid var(--border-subtle);font-size:var(--font-size-body)}
+  .srcrow .fav{width:24px;height:24px;font-size:11px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -265,7 +366,7 @@ dl.specs dd{text-align:right}
 <div class="app" id="app">
   <header class="top2">
     <div class="hnav">
-      <a class="logo" href="#" aria-label="catalog.cafe home">catalog.cafe</a>
+      <a class="logo" href="#" aria-label="Catalog Cafe home">Catalog Cafe</a>
       <nav class="navs" aria-label="Site"><button class="navl" id="aboutNav">About</button><a class="navl" href="#news">News</a><button class="icon-btn" id="searchBtn" aria-label="Search all products" aria-haspopup="dialog"></button></nav>
     </div>
     <button class="review" id="reviewBtn" hidden></button>
@@ -551,7 +652,7 @@ function route(){
   S.fam=null;S.type=null;
   if(fam&&b){const t=fam.items.find(x=>x.id===b&&!x.empty);if(t){S.view=t.k;S.fam=fam.slug;S.type=t.id;S.filters[t.k]=[...t.f]}else{S.view='fam';S.fam=fam.slug}}
   else if(fam){S.view='fam';S.fam=fam.slug}
-  else if(a==='news')S.view='news';
+  else if(a==='news'){S.view='news';S.post=b||null}
   else S.view='home';
   save();closeModal();renderMain(true);
 }
@@ -571,11 +672,104 @@ const loadingMsg=c=>c&&c.key==='beans'&&BEANS_LOADING&&LOAD!=='offline'?'Loading
 let limit=0, list=[];
 const PAGE=60;
 function renderMain(fresh){
+  if(S.view!=='news')app.classList.remove('newsmode');
   if(S.view==='news')renderNews();else if(S.view==='home')renderHome();else if(S.view==='fam')renderFamily(GROUPS.find(f=>f.slug===S.fam));else renderCat(CATS.find(c=>c.key===S.view),fresh);
   if(fresh)main.scrollTop=0;
 }
+/* ---------- news: published posts are public; drafts wait in the review queue for the owner ---------- */
+let NEWS=[], NEWS_LOAD='loading';
+const NEWS_INTRO='Short, sourced notes on new coffee gear, compared with what’s already in the catalog.';
+async function loadNews(){
+  if(!SB){NEWS_LOAD='offline';return}
+  try{const {data,error}=await SB.from('news').select('id,doc,published_at').order('published_at',{ascending:false});
+    if(error)throw error;NEWS=data.map(r=>({id:r.id,...r.doc,date:r.published_at}));NEWS_LOAD='ready'}
+  catch(e){NEWS_LOAD='offline'}
+  if(S.view==='news')renderMain(false);
+}
+const drafts=()=>isEditor?PENDING.filter(p=>p.collection==='news').map(p=>({...(p.data||{}),id:p.doc_id,sources:p.sources||[],draft:true,pid:p.id,date:p.created_at})):[];
+const postById=id=>NEWS.find(n=>n.id===id)||drafts().find(n=>n.id===id);
+const fmtDate=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return ''}};
+// keep the last two words together so a line never ends with one word on its own
+const keepLast=t=>{const s=String(t??'').trim(), i=s.lastIndexOf(' ');return i>0&&s.split(' ').length>3?s.slice(0,i)+' '+s.slice(i+1):s};
+// [[catalog-id|label]] becomes a dotted-underline link to the product when it is in the catalog
+function inline(t){
+  return esc(keepLast(t)).replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g,(m,id,label)=>byId(id)?`<button class="ilink" data-open="${id}">${label}</button>`:label);
+}
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}};
+function favHtml(u){const h=hostOf(u);return `<span class="fav" aria-hidden="true">${esc((h[0]||'?').toUpperCase())}<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64" alt="" loading="lazy" onload="this.naturalWidth>16&&this.classList.add('on')" onerror="this.remove()"></span>`}
+function srcList(post){const seen=new Set();return (post.sources||[]).map(x=>({...x,u:safeUrl(x.url)})).filter(x=>x.u&&!seen.has(hostOf(x.u))&&seen.add(hostOf(x.u)))}
+function metaHtml(post){
+  const src=srcList(post);
+  return `<div class="meta"><span>${post.draft?'Draft · ':''}${esc(fmtDate(post.date))}</span>${src.length?`<span aria-hidden="true">·</span><button class="srcbtn" data-src="${esc(post.id)}" aria-haspopup="dialog">Sourced from <span class="favs">${src.slice(0,4).map(x=>favHtml(x.u)).join('')}</span></button>`:''}</div>`;
+}
+// product picture: the catalog photo (and a link to it) when the product is live, a drawing otherwise
+function tileHtml(x,cls=''){
+  const it=x&&x.catalog_id&&byId(x.catalog_id);
+  if(it)return `<button class="th tile ${cls}" data-open="${esc(it.id)}" aria-label="${esc(it.name)}">${pic(it)}</button>`;
+  const spec=x&&x.art?{...x.art,name:x.name||''}:null;
+  return `<span class="th tile ${cls}">${spec?art(spec):''}</span>`;
+}
+function rowHtml(post){
+  const prod=post.product||{};
+  return `<article class="nrow">${tileHtml(prod)}<div style="min-width:0">
+    <a class="cover" href="#news/${esc(post.id)}"><h3>${esc(keepLast(post.title))}</h3></a><p class="dek">${esc(post.dek||'')}</p>${metaHtml(post)}</div></article>`;
+}
 function renderNews(){
-  main.innerHTML=`<div class="groups catpage"><div class="cat-h"><a class="backl" href="#">← All products</a><div class="cat-row"><h2 class="cat-t">News</h2></div><p class="count">New gear, price changes and what’s worth knowing. The first stories are on their way.</p></div></div>`;
+  app.classList.add('newsmode');
+  if(S.post){renderPost(S.post);return}
+  const ds=drafts();
+  main.innerHTML=`<div class="news"><h1 class="n-title">News</h1><p class="n-intro">${esc(keepLast(NEWS_INTRO))}</p>
+    ${ds.length?`<p class="n-label owner">Waiting for your review · ${ds.length}</p><div class="n-list">${ds.map(rowHtml).join('')}</div>`:''}
+    ${ds.length&&NEWS.length?'<p class="n-label">Published</p>':''}
+    ${NEWS.length?`<div class="n-list">${NEWS.map(rowHtml).join('')}</div>`:`<p class="n-empty">${NEWS_LOAD==='loading'?'Loading…':NEWS_LOAD==='offline'?'News couldn’t load. Refresh the page to try again.':'The first stories are on their way.'}</p>`}</div>`;
+}
+function renderPost(id){
+  const post=postById(id);
+  if(!post){main.innerHTML=`<div class="news"><a class="backl n-back" href="#news">← All news</a><p class="n-intro" style="margin-top:24px">${NEWS_LOAD==='loading'||(SESSION&&!isEditor)?'Loading…':'This story isn’t available.'}</p></div>`;return}
+  const prod=post.product||{}, cmp=post.compare, v=post.verdict;
+  const cat=n=>((n.product||{}).art||{}).cat, same=n=>cat(n)===cat(post)?0:1;
+  const related=NEWS.filter(n=>n.id!==post.id).sort((a,b)=>same(a)-same(b)).slice(0,3);
+  main.innerHTML=`<div class="news">
+    ${post.draft?`<div class="draftbar"><span><span class="k">Draft</span> · Only you can see this until you publish it.</span><span class="acts"><button class="go" data-publish="${esc(post.pid)}">Publish</button><button class="soft" data-reject="${esc(post.pid)}">Reject</button></span></div>`:''}
+    <a class="backl n-back" href="#news">← All news</a>
+    <header class="ahead">${tileHtml(prod)}<div class="ahead-t"><h1>${esc(keepLast(post.title))}</h1><p class="dek">${esc(keepLast(post.dek||''))}</p>${metaHtml(post)}</div></header>
+    ${(post.summary||[]).length?`<section class="short"><p class="n-label">Summary</p><ul>${post.summary.map(x=>`<li>${inline(x)}</li>`).join('')}</ul></section>`:''}
+    ${(post.sections||[]).map(sec=>`<section class="asec"><h2 class="n-label">${esc(sec.h)}</h2>${(sec.p||[]).map(x=>`<p>${inline(x)}</p>`).join('')}</section>`).join('')}
+    ${cmp&&cmp.items?`<section class="asec"><h2 class="n-label">How it compares</h2><div class="cmpwrap"><table class="cmp"><thead><tr><th scope="col"><span class="sr" hidden>Spec</span></th>${cmp.items.map((it,i)=>`<th scope="col" class="${i===0?'hl':''}">${tileHtml(it)}<span class="nm">${esc(it.name)}</span></th>`).join('')}</tr></thead>
+      <tbody>${(cmp.rows||[]).map((r,ri)=>`<tr><th scope="row">${esc(r)}</th>${cmp.items.map((it,i)=>`<td class="${i===0?'hl':''}">${esc((it.values||[])[ri]??'—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`:''}
+    ${v?`<section class="asec"><h2 class="n-label">Who it’s for</h2><div class="verdict">${v.buy?`<div><span>Buy it if</span><p>${inline(v.buy)}</p></div>`:''}${v.skip?`<div><span>Skip it if</span><p>${inline(v.skip)}</p></div>`:''}</div></section>`:''}
+    ${related.length?`<section class="asec"><h2 class="n-label">Related articles</h2><div class="n-list">${related.map(rowHtml).join('')}</div></section>`:''}
+  </div>`;
+  const w=main.querySelector('.cmpwrap');
+  if(w){const f=()=>w.classList.toggle('end',w.scrollLeft+w.clientWidth>=w.scrollWidth-2);w.addEventListener('scroll',f,{passive:true});f()}
+}
+// sources: click opens a popover under the icons; on a phone it fills the screen with a close button
+function closeSrc(){const el=document.getElementById('srcpop');if(el){el.remove();if(srcFrom)srcFrom.focus();srcFrom=null}}
+let srcFrom=null;
+function openSrc(btn){
+  const had=document.getElementById('srcpop');closeSrc();if(had&&had.dataset.for===btn.dataset.src)return;
+  const post=postById(btn.dataset.src);if(!post)return;
+  srcFrom=btn;
+  const el=document.createElement('div');el.className='srcpop';el.id='srcpop';el.dataset.for=post.id;el.setAttribute('role','dialog');el.setAttribute('aria-label','Sources');
+  el.innerHTML=`<div class="lbx-head"><h2>Sources</h2><button class="x" data-srcx aria-label="Close"><svg viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div><p class="lbx-sub">${esc(post.title)}</p>
+    ${srcList(post).map(x=>`<a class="srcrow" href="${esc(x.u)}" target="_blank" rel="noopener" title="${esc(x.title||'')}">${favHtml(x.u)}<span class="host">${esc(hostOf(x.u))}</span><span class="go-ic" aria-hidden="true">↗</span></a>`).join('')}`;
+  document.body.appendChild(el);
+  if(!phoneMQ.matches){const r=btn.getBoundingClientRect();el.style.left=Math.max(16,Math.min(r.left-6,innerWidth-el.offsetWidth-16))+'px';el.style.top=(r.bottom+6+el.offsetHeight>innerHeight?r.top-6-el.offsetHeight:r.bottom+6)+'px'}
+  else document.body.style.overflow='hidden';
+  (el.querySelector('[data-srcx]')||el.querySelector('a'))?.focus();
+}
+const _closeSrc=closeSrc;closeSrc=function(){document.body.style.overflow='';_closeSrc()};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-src]');if(b){e.preventDefault();e.stopPropagation();openSrc(b);return}
+  if(e.target.closest('[data-srcx]')){closeSrc();return}
+  if(document.getElementById('srcpop')&&!e.target.closest('#srcpop'))closeSrc();
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('srcpop'))closeSrc()});
+addEventListener('scroll',()=>{if(!phoneMQ.matches)closeSrc()},{passive:true});
+main.addEventListener('scroll',()=>{if(!phoneMQ.matches)closeSrc()},{passive:true});
+async function decideNews(pid,ok){
+  const post=drafts().find(d=>d.pid===pid);
+  if(await decide(pid,ok)){if(ok){await loadNews();location.hash='news/'+(post?post.id:'')}else location.hash='news'}
 }
 /* Home: product groups sorted the way coffee retailers sort them, one bento per group, 3×3 products each. */
 const GROUPS=[
@@ -741,6 +935,7 @@ function drawGrid(){
 }
 main.addEventListener('click',e=>{
   const o=e.target.closest('[data-open]');if(o){openProduct(o.dataset.open);return}
+  const pb=e.target.closest('[data-publish],[data-reject]');if(pb){pb.disabled=true;decideNews(pb.dataset.publish||pb.dataset.reject,!!pb.dataset.publish);return}
   const ch=e.target.closest('[data-chip]');
   if(ch){const c=CATS.find(x=>x.key===S.view), id=ch.dataset.chip;let sel=[...(S.filters[c.key]||[])];
     sel=id==='popular'?[]:sel.includes(id)?sel.filter(x=>x!==id):[...sel,id];
@@ -1030,6 +1225,7 @@ async function boot(){
   const cfg=window.CATALOG_CONFIG||{};
   if(!window.supabase||!cfg.url||!cfg.anonKey){LOAD='offline';renderAll(true);return}
   SB=window.supabase.createClient(cfg.url,cfg.anonKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true}});
+  loadNews();
   await loadCatalog(true);
   SB.auth.onAuthStateChange((ev,s)=>{SESSION=s;setTimeout(checkAdmin,0)});
   const {data}=await SB.auth.getSession();SESSION=data.session;checkAdmin();
@@ -1080,12 +1276,13 @@ async function fullBean(id){
 async function checkAdmin(){
   isEditor=false;renderSign();
   if(SESSION){const {data}=await SB.rpc('is_admin');isEditor=data===true}
-  if(isEditor)await loadPending();else{PENDING=[];updateReviewBtn()}
+  if(isEditor)await loadPending();else{PENDING=[];updateReviewBtn();if(S.view==='news')renderMain(false)}
 }
 async function loadPending(){
   const {data}=await SB.from('proposals').select('id,doc,created_at').eq('status','pending').order('created_at');
-  PENDING=(data||[]).map(r=>({...r.doc,id:r.id}));updateReviewBtn();
+  PENDING=(data||[]).map(r=>({...r.doc,id:r.id,created_at:r.created_at}));updateReviewBtn();
   if(layer.querySelector('#reviewList'))openReview();
+  if(S.view==='news')renderMain(false);
 }
 function updateReviewBtn(){const rb=document.getElementById('reviewBtn');rb.hidden=!PENDING.length;rb.textContent=`Review ${PENDING.length}`}
 function openSignIn(){
@@ -1107,7 +1304,7 @@ function openSignIn(){
 }
 function openAbout(){
   openModal(`<h2 class="mt">About</h2><div class="note" style="margin-top:14px">
-    <p>catalog.cafe helps you build a coffee setup. Answer a few questions and it narrows the catalog to the grinders, espresso machines, brewers, kettles, scales and beans that fit how you drink coffee.</p>
+    <p>Catalog Cafe helps you build a coffee setup. Answer a few questions and it narrows the catalog to the grinders, espresso machines, brewers, kettles, scales and beans that fit how you drink coffee.</p>
     <p>Coffee bean listings use data from <a href="https://www.loffeelabs.com/" target="_blank" rel="noopener">Loffee Labs</a>’ Bean Base.</p>
     <p><strong>Affiliate disclosure.</strong> Some links on this site are affiliate links. If you buy through them, we may earn a small commission at no extra cost to you. This never affects which products are listed or how they’re ranked.</p>
     <p>Prices are approximate and checked regularly, but always confirm the current price with the retailer before buying.</p></div>`);
@@ -1117,6 +1314,13 @@ function openAbout(){
 const KIND={add:'New',update:'Update',discontinue:'Discontinue'};
 function fmtVal(k,v){if(k==='price')return money(Number(v)||0);if(Array.isArray(v))return v.map(x=>typeof x==='object'?(x.label||x.title||''):x).join(', ');if(v&&typeof v==='object')return JSON.stringify(v);return String(v)}
 function propHtml(p){
+  if(p.collection==='news'){
+    const d=p.data||{}, src=(p.sources||[]).map(x=>({t:x.title||x.url,u:safeUrl(x.url)})).filter(x=>x.u).slice(0,4);
+    return `<div class="prop"><div class="top"><span class="what">${esc(d.title||p.item_name)}</span><span class="kind">News draft</span></div>
+      ${d.dek?`<div class="why">${esc(d.dek)}</div>`:''}
+      ${src.length?`<div class="src">${src.map(x=>`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t).slice(0,48)} ↗</a>`).join('')}</div>`:''}
+      <div class="acts"><button class="pv" data-preview="${esc(p.doc_id)}">Preview</button><button class="ok" data-ok="${esc(p.id)}">Publish</button><button class="no" data-no="${esc(p.id)}">Reject</button></div></div>`;
+  }
   let body='';
   if(p.kind==='update'&&p.changes){
     body=`<div class="diff">${Object.keys(p.changes).map(k=>`<span>${esc(k)}</span><span>${p.previous&&p.previous[k]!==undefined?`<s>${esc(fmtVal(k,p.previous[k]))}</s> → `:''}${esc(fmtVal(k,p.changes[k]))}</span>`).join('')}</div>`;
@@ -1138,13 +1342,17 @@ async function decide(id,ok){
   return true;
 }
 function openReview(){
-  openModal(`<h2 class="mt">Review queue</h2><p class="ms">${PENDING.length?`${PENDING.length} change${PENDING.length>1?'s':''} from the research agent`:'All caught up'}</p>
-    ${PENDING.length>1?`<div class="allbar"><span class="ms" style="margin:0">Approve applies the change to the live site.</span><button class="pill" id="okAll">Approve all</button></div>`:''}
+  openModal(`<h2 class="mt">Review queue</h2><p class="ms">${PENDING.length?`${PENDING.length} change${PENDING.length>1?'s':''} from the research agent. News drafts are published only when you choose Publish.`:'All caught up'}</p>
+    ${PENDING.length>1?`<div class="allbar"><span class="ms" style="margin:0">Approve applies the change to the live site.</span><button class="pill" id="okAll">Approve all catalog changes</button></div>`:''}
     <div id="reviewList">${PENDING.map(propHtml).join('')}</div>`);
   const list=document.getElementById('reviewList');
-  list.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;b.disabled=true;const ok=!!b.dataset.ok;if(await decide(b.dataset.ok||b.dataset.no,ok)&&ok)loadCatalog(false)});
+  list.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.preview){closeModal();location.hash='news/'+b.dataset.preview;return}
+    b.disabled=true;const ok=!!b.dataset.ok, id=b.dataset.ok||b.dataset.no, isNews=(PENDING.find(p=>p.id===id)||{}).collection==='news';
+    if(await decide(id,ok)&&ok){if(isNews)loadNews();else loadCatalog(false)}});
   const all=document.getElementById('okAll');
-  if(all)all.onclick=async()=>{all.disabled=true;for(const p of [...PENDING])await decide(p.id,true);loadCatalog(false)};
+  // Approve all covers catalog changes only; news drafts are always published one at a time
+  if(all)all.onclick=async()=>{all.disabled=true;for(const p of PENDING.filter(x=>x.collection!=='news'))await decide(p.id,true);loadCatalog(false)};
 }
 document.getElementById('reviewBtn').onclick=openReview;
 
