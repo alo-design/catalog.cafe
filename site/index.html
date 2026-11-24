@@ -267,6 +267,12 @@ dl.specs dd{text-align:right}
 .th.tile{display:block;padding:8%;border:0;border-radius:var(--radius-option);background:var(--surface-hover-subtle)}
 .th.tile>svg,.th.tile>img{width:100%;height:100%;display:block;object-fit:contain;overflow:visible}
 button.th.tile{cursor:pointer}
+.th.tile.photo{padding:0;overflow:hidden}
+.photo img,.th.tile.photo>img{display:block;width:100%;height:100%;object-fit:cover;background:var(--surface-hover-subtle)}
+.photo.broken img{visibility:hidden}
+.afig{margin:var(--gap-section) 0}
+.afig img{height:auto;max-height:420px;object-fit:contain;border-radius:var(--radius-option)}
+.afig figcaption{margin-top:var(--gap-stack);font-size:var(--font-size-caption);color:var(--text-secondary);text-wrap:pretty}
 @media (hover:hover){button.th.tile:hover{background:var(--surface-control)}}
 /* date · Sourced from [favicons] */
 .meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:var(--font-size-meta);color:var(--text-secondary)}
@@ -287,8 +293,10 @@ button.th.tile{cursor:pointer}
 @media (hover:hover){.srcrow:hover{background:var(--surface-page)}}
 /* article */
 .backl.n-back{display:inline-block;margin-top:var(--gap-stack)}
-.ahead{display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--inset-control) 20px;align-items:start;margin:var(--gap-section) 0}
-.ahead .th{width:96px;height:96px;grid-row:1/span 1}
+.ahead{display:flex;gap:20px;align-items:stretch;margin:var(--gap-section) 0}
+.ahead-t{flex:1;min-width:0}
+/* the photo is square and as tall as the headline, dek and meta beside it (sized in sizeHero) */
+.ahead .th{flex:none;width:var(--hero,120px);height:var(--hero,120px)}
 .ahead h1{margin:0;font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em;line-height:1.25}
 .ahead .dek{margin:var(--gap-stack) 0 0;color:var(--text-secondary)}
 .ahead .meta{margin-top:var(--gap-controls)}
@@ -348,7 +356,8 @@ table.cmp{width:100%;border-collapse:collapse;table-layout:fixed}
   /* article on a phone: title first, then the photo across the full width */
   .ahead{display:flex;flex-direction:column;align-items:stretch;gap:0}
   .ahead .ahead-t{order:1}
-  .ahead .th{order:2;width:auto;height:240px;margin:var(--gap-section) calc(var(--gutter-page-compact) * -1) 0;border-radius:0;padding:var(--gap-section)}
+  .ahead .th{order:2;width:auto;height:auto;aspect-ratio:4/3;margin:var(--gap-section) calc(var(--gutter-page-compact) * -1) 0;border-radius:0;padding:var(--gap-section)}
+  .ahead .th.photo{padding:0}
   .cmpwrap{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent)}
   .cmpwrap.end{-webkit-mask-image:none;mask-image:none}
   table.cmp{width:520px}
@@ -709,9 +718,22 @@ function tileHtml(x,cls=''){
   const spec=x&&x.art?{...x.art,name:x.name||''}:null;
   return `<span class="th tile ${cls}">${spec?art(spec):''}</span>`;
 }
+// news photos: makers' own product photos, resized by Netlify's image CDN for the hosts listed in netlify.toml
+const IMG_HOSTS=['www.lelit.com','weberworkshops.com','mmx.prnewswire.com','mmx.prnasia.com','jp.kurasu.kyoto','cdn.shopify.com'];
+function imgSrc(u,w){const h=hostOf(u);return IMG_HOSTS.includes(h)?`/.netlify/images?url=${encodeURIComponent(u)}&w=${w}&fm=webp`:u}
+function photoHtml(im,w){const u=safeUrl(im&&im.url);if(!u)return '';
+  return `<img src="${esc(imgSrc(u,w))}" alt="${esc(im.alt||'')}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="if(this.dataset.raw!=='1'){this.dataset.raw='1';this.src=this.getAttribute('data-src')}else{this.closest('.photo')?.classList.add('broken')}" data-src="${esc(u)}">`}
+// the post's own photo when it has one; otherwise the catalog photo or a drawing
+function heroHtml(post,w){
+  const im=(post.images||[])[0], prod=post.product||{};
+  if(!im)return tileHtml(prod);
+  const it=prod.catalog_id&&byId(prod.catalog_id);
+  return it?`<button class="th tile photo" data-open="${esc(it.id)}" aria-label="${esc(it.name)}">${photoHtml(im,w)}</button>`:`<span class="th tile photo">${photoHtml(im,w)}</span>`;
+}
+function figHtml(im){const cap=im.caption||'';return `<figure class="afig photo">${photoHtml(im,1200)}<figcaption>${cap?esc(keepLast(cap))+' · ':''}Photo: ${esc(im.credit||hostOf(im.url))}</figcaption></figure>`}
 function rowHtml(post){
   const prod=post.product||{};
-  return `<article class="nrow">${tileHtml(prod)}<div style="min-width:0">
+  return `<article class="nrow">${heroHtml(post,160)}<div style="min-width:0">
     <a class="cover" href="#news/${esc(post.id)}"><h3>${esc(keepLast(post.title))}</h3></a><p class="dek">${esc(post.dek||'')}</p>${metaHtml(post)}</div></article>`;
 }
 function renderNews(){
@@ -727,21 +749,31 @@ function renderPost(id){
   const post=postById(id);
   if(!post){main.innerHTML=`<div class="news"><a class="backl n-back" href="#news">← All news</a><p class="n-intro" style="margin-top:24px">${NEWS_LOAD==='loading'||(SESSION&&!isEditor)?'Loading…':'This story isn’t available.'}</p></div>`;return}
   const prod=post.product||{}, cmp=post.compare, v=post.verdict;
+  const figs=(post.images||[]).slice(1);   // the rest of the photos go through the article, one after each paragraph
   const cat=n=>((n.product||{}).art||{}).cat, same=n=>cat(n)===cat(post)?0:1;
   const related=NEWS.filter(n=>n.id!==post.id).sort((a,b)=>same(a)-same(b)).slice(0,3);
   main.innerHTML=`<div class="news">
     ${post.draft?`<div class="draftbar"><span><span class="k">Draft</span> · Only you can see this until you publish it.</span><span class="acts"><button class="go" data-publish="${esc(post.pid)}">Publish</button><button class="soft" data-reject="${esc(post.pid)}">Reject</button></span></div>`:''}
     <a class="backl n-back" href="#news">← All news</a>
-    <header class="ahead">${tileHtml(prod)}<div class="ahead-t"><h1>${esc(keepLast(post.title))}</h1><p class="dek">${esc(keepLast(post.dek||''))}</p>${metaHtml(post)}</div></header>
+    <header class="ahead">${heroHtml(post,480)}<div class="ahead-t"><h1>${esc(keepLast(post.title))}</h1><p class="dek">${esc(keepLast(post.dek||''))}</p>${metaHtml(post)}</div></header>
     ${(post.summary||[]).length?`<section class="short"><p class="n-label">Summary</p><ul>${post.summary.map(x=>`<li>${inline(x)}</li>`).join('')}</ul></section>`:''}
-    ${(post.sections||[]).map(sec=>`<section class="asec"><h2 class="n-label">${esc(sec.h)}</h2>${(sec.p||[]).map(x=>`<p>${inline(x)}</p>`).join('')}</section>`).join('')}
+    ${(post.sections||[]).map(sec=>`<section class="asec"><h2 class="n-label">${esc(sec.h)}</h2>${(sec.p||[]).map(x=>`<p>${inline(x)}</p>${figs.length?figHtml(figs.shift()):''}`).join('')}</section>`).join('')}
     ${cmp&&cmp.items?`<section class="asec"><h2 class="n-label">How it compares</h2><div class="cmpwrap"><table class="cmp"><thead><tr><th scope="col"><span class="sr" hidden>Spec</span></th>${cmp.items.map((it,i)=>`<th scope="col" class="${i===0?'hl':''}">${tileHtml(it)}<span class="nm">${esc(it.name)}</span></th>`).join('')}</tr></thead>
       <tbody>${(cmp.rows||[]).map((r,ri)=>`<tr><th scope="row">${esc(r)}</th>${cmp.items.map((it,i)=>`<td class="${i===0?'hl':''}">${esc((it.values||[])[ri]??'—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`:''}
+    ${figs.length?figs.splice(0).map(figHtml).join(''):''}
     ${v?`<section class="asec"><h2 class="n-label">Who it’s for</h2><div class="verdict">${v.buy?`<div><span>Buy it if</span><p>${inline(v.buy)}</p></div>`:''}${v.skip?`<div><span>Skip it if</span><p>${inline(v.skip)}</p></div>`:''}</div></section>`:''}
     ${related.length?`<section class="asec"><h2 class="n-label">Related articles</h2><div class="n-list">${related.map(rowHtml).join('')}</div></section>`:''}
   </div>`;
+  sizeHero();
   const w=main.querySelector('.cmpwrap');
   if(w){const f=()=>w.classList.toggle('end',w.scrollLeft+w.clientWidth>=w.scrollWidth-2);w.addEventListener('scroll',f,{passive:true});f()}
+}
+// keep the header photo exactly as tall as the text beside it
+let heroRO=null;
+function sizeHero(){
+  const h=main.querySelector('.ahead'), t=h&&h.querySelector('.ahead-t');if(heroRO)heroRO.disconnect();if(!t)return;
+  const set=()=>h.style.setProperty('--hero',Math.max(96,Math.round(t.getBoundingClientRect().height))+'px');
+  heroRO=new ResizeObserver(set);heroRO.observe(t);set();
 }
 // sources: click opens a popover under the icons; on a phone it fills the screen with a close button
 function closeSrc(){const el=document.getElementById('srcpop');if(el){el.remove();if(srcFrom)srcFrom.focus();srcFrom=null}}

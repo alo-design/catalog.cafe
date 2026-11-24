@@ -1,6 +1,10 @@
 [build]
   publish = "site"
 
+# News photos are the makers' own product photos; the image CDN resizes them. Keep in sync with IMG_HOSTS in site/index.html.
+[images]
+  remote_images = ["https://www\\.lelit\\.com/.*", "https://weberworkshops\\.com/.*", "https://mmx\\.prnewswire\\.com/.*", "https://mmx\\.prnasia\\.com/.*", "https://jp\\.kurasu\\.kyoto/.*", "https://cdn\\.shopify\\.com/.*"]
+
 [[headers]]
   for = "/*"
   [headers.values]

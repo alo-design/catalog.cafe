@@ -17,6 +17,8 @@ Catalog Cafe (catalog.cafe) is a coffee setup finder: pick a category, answer a 
 ## News
 News posts are drafted into `proposals` with `collection: 'news'` (`doc_id` is the URL slug, `data` holds the article, `sources` the links). Signed in as the owner, drafts appear at the top of catalog.cafe/#news and in the review queue. Open one to preview it, then choose Publish or Reject. “Approve all” never publishes news.
 
+Each post can carry `data.images` (`[{url, alt, caption?, credit}]`): the makers' own product photos. The first is the post's photo in the list and beside the headline; the rest go through the article, one after each paragraph. Photos from hosts listed in `netlify.toml` (`[images] remote_images`, mirrored in `IMG_HOSTS`) are resized by Netlify's image CDN; others load straight from the maker.
+
 ## Publishing
 Pushing to `main` publishes the `site/` folder to catalog.cafe through Netlify.
 
