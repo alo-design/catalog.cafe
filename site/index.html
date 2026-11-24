@@ -101,11 +101,17 @@ b,strong{font-weight:400}
 .fpop h2{margin:0 0 var(--gap-controls);font-size:var(--font-size-body);font-weight:400;color:var(--text-primary)}
 .fpop .chips{gap:6px}
 /* filter in the popover: an outline pill; on hover a × slides in from the right with the Quick spring, and leaving resets instantly */
-.fpill{position:relative;height:30px;padding:0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);background:none;display:inline-flex;align-items:center;font-size:var(--font-size-caption);color:var(--text-primary);overflow:hidden}
-.fpill .ic{width:0;height:14px;margin-left:0;opacity:0;transform:translateX(8px);flex:none}
-@media (hover:hover){.fpill:hover,.fpill:focus-visible{padding-right:8px}
-  .fpill:hover .ic,.fpill:focus-visible .ic{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none;transition:width .3s cubic-bezier(.3,1.45,.6,1),margin .3s cubic-bezier(.3,1.45,.6,1),transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}}
-@media (hover:none){.fpill{padding-right:8px}.fpill .ic{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none}}
+.fpill{height:30px;padding:0 8px 0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);background:none;display:inline-flex;align-items:center;gap:var(--gap-tight);font-size:var(--font-size-caption);color:var(--text-primary)}
+.fpill .ic{width:14px;height:14px;color:var(--text-secondary);flex:none}
+@media (hover:hover){.fpill:hover{background:var(--surface-control)}.fpill:hover .ic{color:var(--text-primary)}}
+/* the fraction's x (clears this bento's filters) slides in from the right on hover with the Quick spring; leaving resets instantly */
+.b-n.frac{display:inline-flex;align-items:center}
+.fr-n{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.fr-x{display:inline-grid;place-items:center;width:0;height:14px;margin-left:0;padding:0;border:0;background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);overflow:hidden;cursor:pointer}
+.fr-x .ic{width:12px;height:12px;flex:none}
+.b-n.frac.on .fr-x{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none}
+@media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none;transition:width .3s cubic-bezier(.3,1.45,.6,1),margin .3s cubic-bezier(.3,1.45,.6,1),transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}
+  .fr-x:hover{color:var(--text-primary)}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
 .tb2{display:block;width:100%;aspect-ratio:1;border:0;background:none;padding:12%;border-radius:var(--radius-compact)}
@@ -908,10 +914,12 @@ const optLabelOf=(k,v)=>{const c=CATS.find(x=>x.key===k);const o=c&&c.groups.fla
 const activeFilters=keys=>keys.flatMap(k=>(S.filters[k]||[]).map(v=>({k,v,label:optLabelOf(k,v)})));
 // a bento's count: a plain number, or "matches/all" as a button when filters narrow it
 function setCount(nEl,b,n){
-  const on=activeFilters(b.keys).length>0;
+  const on=activeFilters(b.keys).length>0, txt=`${fmtN(n)}/${fmtN(b.all())}`;
   nEl.classList.toggle('frac',on);
-  if(on){nEl.textContent=`${fmtN(n)}/${fmtN(b.all())}`;nEl.setAttribute('role','button');nEl.tabIndex=0;nEl.setAttribute('aria-haspopup','dialog');nEl.setAttribute('aria-label',`${fmtN(n)} of ${fmtN(b.all())} shown. Show filters`)}
-  else{nEl.textContent=fmtN(n);['role','tabindex','aria-haspopup','aria-label'].forEach(a=>nEl.removeAttribute(a))}
+  if(!on){nEl.textContent=fmtN(n);return}
+  const cur=nEl.querySelector('.fr-n');
+  if(cur){cur.textContent=txt;cur.setAttribute('aria-label',`${fmtN(n)} of ${fmtN(b.all())} shown. Show filters`);return}
+  nEl.innerHTML=`<button class="fr-n" aria-haspopup="dialog" aria-label="${fmtN(n)} of ${fmtN(b.all())} shown. Show filters">${txt}</button><button class="fr-x" data-clearfrac aria-label="Clear these filters">${ico('x')}</button>`;
 }
 let fpopFor=null, fpopTimer=null;
 function closeFpop(){clearTimeout(fpopTimer);document.getElementById('fpop')?.remove();if(fpopFor)fpopFor.classList.remove('on');fpopFor=null}
@@ -928,11 +936,13 @@ function openFpop(nEl){
 }
 main.addEventListener('mouseover',e=>{if(!matchMedia('(hover:hover)').matches)return;const n=e.target.closest('.b-n.frac');if(n)openFpop(n)});
 main.addEventListener('mouseout',e=>{const n=e.target.closest('.b-n.frac');if(n&&fpopFor===n&&!(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('#fpop')))fpopTimer=setTimeout(closeFpop,150)});
-main.addEventListener('keydown',e=>{const n=e.target.closest&&e.target.closest('.b-n.frac');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():(openFpop(n),document.querySelector('#fpop .fpill')?.focus())}},true);
+main.addEventListener('keydown',e=>{const n=e.target.closest&&e.target.closest('.fr-n')&&e.target.closest('.b-n.frac');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():(openFpop(n),document.querySelector('#fpop .fpill')?.focus())}},true);
 document.addEventListener('click',e=>{
   const u=e.target.closest('[data-unfilter]');
   if(u){const [k,v]=u.dataset.unfilter.split(':'), n=fpopFor;S.filters[k]=(S.filters[k]||[]).filter(x=>x!==v);save();drawAll(true,[k]);if(n&&n.isConnected&&n.classList.contains('frac'))openFpop(n);else closeFpop();return}
   if(e.target.closest('#fpop'))return;
+  const cx=e.target.closest('[data-clearfrac]');
+  if(cx){e.preventDefault();e.stopPropagation();const b=BENTOS[Number(cx.closest('.bento').dataset.bi)];closeFpop();if(b){b.keys.forEach(k=>S.filters[k]=[]);save();drawAll(true,b.keys)}return}
   const n=e.target.closest('.b-n.frac');if(n){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():openFpop(n);return}
   if(fpopFor)closeFpop();
 },true);
