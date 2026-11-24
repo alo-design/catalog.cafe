@@ -1,6 +1,7 @@
 # Working on Catalog Cafe (catalog.cafe)
 
 - The site is plain HTML, CSS and JavaScript in `site/index.html`. There is no build step. Pushing to `main` publishes `site/` through Netlify.
+- **Work on a branch, not `main`.** Each push to `main` is a production deploy and costs Netlify credits (15 each); deploy previews are free. Push changes to a branch and open a pull request: Netlify builds a deploy preview at `https://deploy-preview-<PR number>--catalog-cafe.netlify.app`. Share that link with Adrian, keep adding commits to the same branch while he reviews, and merge to `main` only when he says to publish.
 - Data lives in Supabase (project `catalog-cafe`). The schema is in `supabase/schema.sql`. Never put secret keys in `site/`; only the publishable key belongs in `site/config.js`.
 
 ## Design rules
