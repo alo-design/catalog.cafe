@@ -90,15 +90,15 @@ b,strong{font-weight:400}
 .sec-t{flex:1;margin:0;min-width:0;font-size:var(--font-size-body);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec-t a,.sec-t .lbl{display:inline-block;color:inherit;text-decoration:none}
 /* filtered bento: the count becomes a fraction (matches/all); hovering it opens the Filters popover */
-.b-n.frac{position:relative;z-index:2;pointer-events:auto}
-/* the grey box sits behind the fraction only; the x appears outside it, to the right */
-.fr-n{margin:-2px -6px;padding:2px 6px;border-radius:var(--radius-compact)}
-.b-n.frac.on .fr-n{background:var(--surface-control);color:var(--text-primary)}
-@media (hover:hover){.fr-n:hover{background:var(--surface-control);color:var(--text-primary)}}
+.b-n.frac{position:relative;z-index:2;display:inline-flex;align-items:center;gap:var(--gap-tight);margin:-7px -9px -7px 0;pointer-events:auto}
+/* like an answer row: no fill at rest; hover is a rounded surface-raised fill with 12px either side of the text */
+.fr-n{height:var(--height-control-sm);padding:0 var(--gap-controls);border:0;border-radius:var(--radius-compact);background:none;font:inherit;color:inherit;cursor:pointer}
+.b-n.frac.on .fr-n{background:var(--surface-raised);color:var(--text-primary)}
+@media (hover:hover){.fr-n:hover{background:var(--surface-raised);color:var(--text-primary)}}
 /* while the bento sorts, the fraction flashes its hover state */
 .bento.busy .fr-n{animation:fracflash .6s ease-in-out infinite alternate}
 .b-n.frac.ping .fr-n{animation:fracflash .3s ease-in-out 4 alternate}
-@keyframes fracflash{from{background:transparent;color:var(--text-secondary)}to{background:var(--surface-control);color:var(--text-primary)}}
+@keyframes fracflash{from{background:transparent;color:var(--text-secondary)}to{background:var(--surface-raised);color:var(--text-primary)}}
 .fpop{position:fixed;z-index:25;width:300px;padding:12px var(--inset-control) var(--inset-control);background:var(--surface-raised);border-radius:var(--radius-option);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle);animation:fade .12s}
 .fpop h2{margin:0 0 var(--gap-controls);font-size:var(--font-size-body);font-weight:400;color:var(--text-primary)}
 .fpop .chips{gap:6px}
@@ -106,15 +106,12 @@ b,strong{font-weight:400}
 .fpill{height:30px;padding:0 8px 0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-control);background:none;display:inline-flex;align-items:center;gap:var(--gap-tight);font-size:var(--font-size-caption);color:var(--text-primary)}
 .fpill .ic{width:14px;height:14px;color:var(--text-secondary);flex:none}
 @media (hover:hover){.fpill:hover{background:var(--surface-control)}.fpill:hover .ic{color:var(--text-primary)}}
-/* the fraction's x (clears this bento's filters) slides in from the right on hover with the Quick spring; leaving resets instantly */
-.b-n.frac{display:inline-flex;align-items:center}
-.fr-n{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
-.fr-x{display:inline-grid;place-items:center;width:14px;height:14px;margin-left:calc(var(--gap-tight) + 6px);padding:0;border:0;background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);pointer-events:none;cursor:pointer}
+/* the x: a 32px circle, as tall as the fraction's fill, outside it; slides in on hover with the Quick spring, its space always kept */
+.fr-x{display:grid;place-items:center;width:var(--height-control-sm);height:var(--height-control-sm);padding:0;border:0;border-radius:var(--radius-control);background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);pointer-events:none;cursor:pointer}
 .fr-x .ic{width:12px;height:12px;flex:none}
-/* the x's space is kept, so the fraction never moves when it appears */
 .b-n.frac.on .fr-x{opacity:1;transform:none;pointer-events:auto}
 @media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{opacity:1;transform:none;pointer-events:auto;transition:transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}
-  .fr-x:hover{color:var(--text-primary)}}
+  .fr-x:hover{background:var(--surface-raised);color:var(--text-primary)}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
 .tb2{display:block;width:100%;aspect-ratio:1;border:0;background:none;padding:12%;border-radius:var(--radius-compact)}
@@ -132,7 +129,6 @@ b,strong{font-weight:400}
 /* title hover: letters step up to Medium and turn blue one after another while the title slings 4px right.
    Figma's Quick spring; leaving the hover resets instantly (transitions live only on the hover state). */
 @media (hover:hover){
-  .bento:not(.empty):hover .sec-t a,.bento:not(.empty):hover .sec-t .lbl{transform:translateX(4px);transition:transform .3s cubic-bezier(.3,1.45,.6,1)}
   .bento:not(.empty):hover .sec-t .ch{font-weight:500;color:var(--text-highlight);transition:font-weight .1s ease-out,color .15s ease-out;transition-delay:calc(var(--i) * 12ms)}
 }
 .bento:focus-visible .sec-t .ch{font-weight:500;color:var(--text-highlight)}
@@ -154,7 +150,7 @@ b,strong{font-weight:400}
 
 /* ---------- setup assistant (chat column) ---------- */
 .thread{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:var(--gap-controls);padding:var(--gap-stack) var(--inset-surface) var(--inset-control) var(--gutter-page-wide)}
-.qh{margin:0;font-size:var(--font-size-heading);font-weight:300;letter-spacing:-.02em;line-height:1.25;text-wrap:balance}
+.qh{margin:0;font-size:var(--font-size-body);font-weight:400;line-height:1.45;text-wrap:pretty}
 .qsmall{margin:var(--gap-stack) 0 0;font-size:var(--font-size-body)}
 .qlab,.past,.hint{margin:0;font-size:var(--font-size-caption);color:var(--text-secondary)}
 .bot{margin:0;font-size:var(--font-size-body)}
@@ -172,7 +168,13 @@ button.me{cursor:pointer}
 [aria-pressed="true"] .box .ic{visibility:visible}
 .ans-acts{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-controls);margin-top:var(--gap-controls)}
 .ans-acts .acts{display:flex;gap:var(--gap-tight)}
-.chatcol.chat-on .ans-acts .ghost{display:none}
+/* messages arrive like a chat app: a short typing indicator, then the message rises in */
+.enter{animation:msgin .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes msgin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.typing{display:inline-flex;gap:4px;padding:6px 0}
+.typing i{width:6px;height:6px;border-radius:var(--radius-control);background:var(--icon-inactive);animation:blink 1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
 .tune{display:flex;flex-direction:column;gap:var(--gap-stack);padding:var(--inset-control);border:1px solid var(--border-subtle);border-radius:var(--radius-option)}
 .kit{padding:var(--gap-tight) 0;border:1px solid var(--border-subtle);border-radius:var(--radius-option)}
 .kit-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:var(--gap-controls);align-items:center;width:100%;border:0;background:none;padding:6px var(--gap-controls);text-align:left;color:var(--text-primary)}
@@ -183,13 +185,12 @@ button.me{cursor:pointer}
 .kit-row .pz,.kit-tot{font-size:var(--font-size-body);font-variant-numeric:tabular-nums}
 .kit-tot{display:flex;justify-content:space-between;margin:var(--gap-tight) var(--gap-controls) 0;padding:10px 0 6px;border-top:1px solid var(--border-subtle)}
 .row-acts{display:flex;flex-wrap:wrap;gap:var(--gap-stack)}
-/* chat box: hidden until the visitor clicks Chat; a single 52px row with a small square send button */
+/* chat box: always at the bottom of the column, like Claude or ChatGPT; it grows with the text up to 6 lines */
 .side-f{flex:none;display:flex;flex-direction:column;gap:var(--gap-stack);padding:var(--gap-stack) var(--inset-surface) 0}
-.chatcol:not(.chat-on) .side-f{display:none}
 .sugg{display:flex;flex-wrap:wrap;gap:var(--gap-stack)}
-.chat{display:flex;align-items:center;gap:var(--gap-stack);height:52px;padding:0 var(--gap-stack) 0 var(--inset-control);border:1px solid var(--border-subtle);border-radius:var(--radius-option);background:var(--surface-raised)}
-.chat input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:var(--font-size-body);color:var(--text-primary);outline:none}
-.chat input::placeholder{color:var(--text-secondary)}
+.chat{display:flex;align-items:flex-end;gap:var(--gap-stack);min-height:52px;padding:10px var(--gap-stack) 10px var(--inset-control);border:1px solid var(--border-subtle);border-radius:var(--radius-option);background:var(--surface-raised)}
+.chat textarea{flex:1;min-width:0;max-height:132px;margin:0 0 6px;padding:0;border:0;background:none;font:inherit;font-size:var(--font-size-body);line-height:1.35;color:var(--text-primary);outline:none;resize:none;overflow-y:auto}
+.chat textarea::placeholder{color:var(--text-secondary)}
 .send{border:0;width:var(--height-control-sm);height:var(--height-control-sm);border-radius:var(--radius-compact);background:var(--surface-control);color:var(--text-secondary);display:grid;place-items:center}
 .send .ic{width:18px;height:18px}
 .chat.has-text .send{background:var(--action-primary);color:var(--text-on-action)}
@@ -410,7 +411,7 @@ table.cmp{width:100%;border-collapse:collapse;table-layout:fixed}
     <div class="thread" id="thread"></div>
     <div class="side-f">
       <div class="sugg" id="sugg" hidden></div>
-      <form class="chat" id="chat"><input id="chatIn" type="text" placeholder="Tell me what you need…" aria-label="Tell the setup assistant what you need" autocomplete="off"><button class="send" aria-label="Send"></button></form>
+      <form class="chat" id="chat"><textarea id="chatIn" rows="1" placeholder="Ask about gear, or answer in your own words" aria-label="Message the setup assistant"></textarea><button class="send" aria-label="Send"></button></form>
     </div>
   </aside>
   <main class="main" id="main" aria-live="polite"></main>
@@ -1103,7 +1104,7 @@ function answer(k,v){
   const a=A(), steps=order(a);
   steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});
   if(k==='drinks'&&v==='easy')a.easy=true;else a[k]=v;
-  save();applyChat();renderSide();
+  save();applyChat();typeThen(()=>{});
 }
 function undoTo(k){const a=A(),steps=order(a);steps.slice(steps.indexOf(k)).forEach(s=>{delete a[s];if(s==='drinks')delete a.easy});picks=new Set();save();applyChat();renderSide()}
 function startOver(){S.chat={};picks=new Set();LOG=[];save();applyChat();renderSide()}
@@ -1152,37 +1153,58 @@ function kitHtml(list,showTotal=true){
 const thread=document.getElementById('thread'), sugg=document.getElementById('sugg');
 function stepHtml(k,a){
   const st=STEPS[k];
-  if(k==='drinks')return `<h3 class="qh">Browse coffee essentials or plan your café setup</h3><p class="qsmall">${st.q}</p>
+  if(k==='drinks')return `<div class="msg"><p class="qh">Browse coffee essentials or plan your café setup. ${st.q}</p>
     <div class="ans">${st.o.map(o=>`<button data-pick="${o[0]}" aria-pressed="${picks.has(o[0])}">${o[1]}<span class="box">${ico('check')}</span></button>`).join('')}</div>
-    <div class="ans-acts"><span></span><span class="acts"><button class="ghost" data-chat>Chat</button><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></span></div>`;
+    <div class="ans-acts"><span></span><span class="acts"><button class="go" data-confirm ${picks.size?'':'disabled'}>Continue</button></span></div></div>`;
   const opts=`<div class="ans">${st.o.map(o=>`<button data-ans="${k}" data-v="${o[0]}"><span>${optLabel(o)}${o[2]?`<small>${o[2]}</small>`:''}</span></button>`).join('')}</div>`;
-  const acts=`<div class="ans-acts"><span></span><span class="acts"><button class="ghost" data-chat>Chat</button></span></div>`;
-  if(st.tune)return `<div class="tune"><p class="qlab">${st.tune}</p><h3 class="qh">${st.q}</h3>${opts}<p class="hint">${st.hint}</p>${acts}</div>`;
-  return `<h3 class="qh">${st.q}</h3>${opts}${acts}`;
+  if(st.tune)return `<div class="msg tune"><p class="qlab">${st.tune}</p><p class="qh">${st.q}</p>${opts}<p class="hint">${st.hint}</p></div>`;
+  return `<div class="msg"><p class="qh">${st.q}</p>${opts}</div>`;
 }
+/* The thread reads top to bottom in the order things happened, like Claude or ChatGPT:
+   each answered question and its answer, any typed messages where they were sent, and the open question last. */
+let TYPING=false, lastSeen=0;
+const doneCount=a=>order(a).filter(k=>k==='drinks'?(a.drinks||a.easy):a[k]).length;
+function logHtml(at){return LOG.filter(m=>m.at===at).map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot msg">${m.html}</div>`).join('')}
 function renderSide(){
-  const a=A(), steps=order(a);let h='';
+  const a=A(), steps=order(a);let h='', n=0, open=false;
+  h+=logHtml(-1);
   for(const k of steps){
     const done=k==='drinks'?(a.drinks||a.easy):a[k];
-    if(done){const shows=answerPills(k).length;h+=`<p class="past">${STEPS[k].q}</p>${shows?`<button class="me" data-show="${k}" title="Show where this filters the products">`:'<p class="me">'}${esc(answerText(k,a))}${shows?'</button>':'</p>'}`;continue}
-    if(LOAD==='loading'&&k!=='drinks'){h+='<p class="past">Loading the catalog…</p>';break}
+    if(done){
+      const shows=answerPills(k).length;
+      h+=`<p class="bot">${k==='drinks'?'Browse coffee essentials or plan your café setup. ':''}${STEPS[k].q}</p>${shows?`<button class="me" data-show="${k}" title="Show where this filters the products">`:'<p class="me">'}${esc(answerText(k,a))}${shows?'</button>':'</p>'}`;
+      n++;h+=logHtml(n);continue;
+    }
+    open=true;
+    if(TYPING)break;
+    if(LOAD==='loading'&&k!=='drinks'){h+='<p class="bot">Loading the catalog…</p>';break}
     h+=stepHtml(k,a);break;
   }
-  if(steps.every(k=>k==='drinks'?(a.drinks||a.easy):a[k])){
+  if(!open&&!TYPING){
     const r=suggest(a);
-    h+=r.items.length?`<p class="bot">${r.fits?'Here’s a setup that fits:':'This is the closest I can get to that budget:'}</p>${kitHtml(r.items)}
-      <div class="row-acts"><button class="soft dark" data-save>Save to my setup</button><button class="soft" data-restart>Start over</button></div>`
+    h+=r.items.length?`<div class="msg"><p class="bot">${r.fits?'Here’s a setup that fits:':'This is the closest I can get to that budget:'}</p>${kitHtml(r.items)}
+      <div class="row-acts" style="margin-top:12px"><button class="soft dark" data-save>Save to my setup</button><button class="soft" data-restart>Start over</button></div></div>`
       :`<p class="bot">${loadingMsg()}</p>`;
+    h+=logHtml(1e3);
   }
-  h+=LOG.map(m=>m.me?`<p class="me">${esc(m.me)}</p>`:`<div class="bot">${m.html}</div>`).join('');
+  if(TYPING)h+='<div class="typing" aria-label="The assistant is typing"><i></i><i></i><i></i></div>';
   thread.innerHTML=h;
-  const n=S.setup.filter(byId).length;
-  sugg.hidden=true;sugg.innerHTML=`<button class="chip" data-say="setup">My setup${n?` (${n})`:''}</button><button class="chip" data-say="currency">Change currency</button>${QUERY?'<button class="chip" data-clearq>Clear search</button>':''}${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
-  thread.scrollTop=thread.scrollHeight;
+  // the newest message rises in; earlier ones stay still
+  const kids=[...thread.children], total=kids.length;
+  if(total>lastSeen&&!reduce){const last=kids.filter(el=>el.classList.contains('msg')||el.classList.contains('me')||el.classList.contains('typing')).pop();if(last)last.classList.add('enter')}
+  lastSeen=total;
+  const ns=S.setup.filter(byId).length;
+  sugg.hidden=true;sugg.innerHTML=`<button class="chip" data-say="setup">My setup${ns?` (${ns})`:''}</button><button class="chip" data-say="currency">Change currency</button>${QUERY?'<button class="chip" data-clearq>Clear search</button>':''}${Object.keys(a).length?'<button class="chip" data-restart>Start over</button>':''}`;
+  requestAnimationFrame(()=>thread.scrollTo({top:thread.scrollHeight,behavior:reduce?'auto':'smooth'}));
+}
+// after an answer or a message, a short typing indicator, then the reply
+function typeThen(fn){
+  if(reduce){fn();renderSide();return}
+  TYPING=true;renderSide();
+  setTimeout(()=>{TYPING=false;fn();renderSide()},520);
 }
 document.getElementById('side').addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
-  if('chat' in t.dataset){const side=document.getElementById('side');side.classList.add('chat-on');document.getElementById('chatIn').focus();thread.scrollTop=thread.scrollHeight;return}
   if(t.dataset.pick){const v=t.dataset.pick;if(picks.has(v))picks.delete(v);else if(v==='unsure')picks=new Set(['unsure']);else{picks.delete('unsure');picks.add(v)}renderSide();thread.querySelector(`[data-pick="${v}"]`)?.focus();return}
   if('confirm' in t.dataset){if(picks.size){const v=[...picks];picks=new Set();answer('drinks',v.includes('unsure')?'easy':v)}return}
   if(t.dataset.ans){answer(t.dataset.ans,t.dataset.v);return}
@@ -1191,7 +1213,7 @@ document.getElementById('side').addEventListener('click',e=>{
   if('save' in t.dataset){const r=suggest(A());S.setup=[...new Set([...S.setup,...r.items.map(x=>x.id)])];save();toast('Saved to your setup');renderSide();return}
   if('clearq' in t.dataset){document.getElementById('chatIn').value='';setQuery('');return}
   if('restart' in t.dataset){startOver();return}
-  if(t.dataset.cur){S.cur=t.dataset.cur;save();LOG.push({html:`Prices are now in ${esc(S.cur)}.`});renderMain(false);renderSide();return}
+  if(t.dataset.cur){S.cur=t.dataset.cur;save();LOG.push({html:`Prices are now in ${esc(S.cur)}.`,at:logAt()});renderMain(false);renderSide();return}
   if(t.dataset.say){reply(t.dataset.say==='setup'?'What’s in my setup?':'Change currency');return}
 });
 function setupReply(){
@@ -1199,8 +1221,14 @@ function setupReply(){
   return its.length?`You have ${its.length} thing${its.length>1?'s':''} saved:${kitHtml(its)}<p class="past" style="margin-top:8px">Prices in ${esc(cur())}.</p>`
     :'Nothing saved yet. Finish the questions above, or open any product and choose “Add to my setup”.';
 }
+// where a typed message sits in the thread: before the first answer (-1), after the nth answer (n), or after the suggested setup
+function logAt(){const a=A(), steps=order(a), n=doneCount(a);return n&&n===steps.length?1e3:n||-1}
 function reply(text){
-  const q=text.trim();if(!q)return;LOG.push({me:q});
+  const q=text.trim();if(!q)return;const at=logAt();LOG.push({me:q,at});
+  const before=LOG.length;
+  typeThen(()=>answerText2(q,at,before));
+}
+function answerText2(q,at,before){
   const low=q.toLowerCase(), code=(low.match(/\b(usd|cad|eur|gbp|aud)\b/)||[])[1];
   if(code&&FX[code.toUpperCase()]){S.cur=code.toUpperCase();save();renderMain(false);LOG.push({html:`Prices are now in ${S.cur}.`})}
   else if(/currenc|price in|prices in/.test(low)){const cs=Object.keys(CURS).filter(c=>FX[c]);LOG.push({html:`Prices are in ${esc(cur())}. Pick another currency:<div class="row-acts" style="margin-top:8px">${cs.map(c=>`<button class="soft${c===cur()?' dark':''}" data-cur="${c}">${c}</button>`).join('')}</div>`})}
@@ -1213,10 +1241,14 @@ function reply(text){
     LOG.push({html:pq?`Looking for<div>${pq.chips.map(c=>`<span class="kw">${esc(c)}</span>`).join('')}</div><p class="past" style="margin-top:8px">${n?`${fmtN(n)} ${n===1?'product fits':'products fit'}. They’re shown in the groups on the right.`:'Nothing in the catalog fits all of that yet. Remove a word to see more.'}</p>`
       :hits.length?`Here’s what I found in the catalog for “${esc(q)}”:${kitHtml(hits,false)}`:`I couldn’t match “${esc(q)}” to anything yet. Try a product type, a brand, or a budget like “under $300”.`});
   }
-  renderSide();
+  LOG.slice(before).forEach(m=>{if(m.at===undefined)m.at=at});
 }
-document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();clearTimeout(qTimer);const i=document.getElementById('chatIn');reply(i.value);i.value='';e.target.classList.remove('has-text')});
-document.getElementById('chatIn').addEventListener('input',e=>{clearTimeout(qTimer);const v=e.target.value;document.getElementById('chat').classList.toggle('has-text',!!v.trim());qTimer=setTimeout(()=>setQuery(v),300)});
+const chatIn=document.getElementById('chatIn');
+const grow=()=>{chatIn.style.height='auto';chatIn.style.height=Math.min(chatIn.scrollHeight,132)+'px'};
+document.getElementById('chat').addEventListener('submit',e=>{e.preventDefault();clearTimeout(qTimer);const v=chatIn.value;if(!v.trim())return;chatIn.value='';grow();e.target.classList.remove('has-text');reply(v);chatIn.focus()});
+// Enter sends, Shift+Enter makes a new line
+chatIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();document.getElementById('chat').requestSubmit()}});
+chatIn.addEventListener('input',e=>{grow();clearTimeout(qTimer);const v=chatIn.value;document.getElementById('chat').classList.toggle('has-text',!!v.trim());qTimer=setTimeout(()=>setQuery(v),300)});
 
 /* ---------- open and close the assistant ---------- */
 document.querySelector('.send').innerHTML=ico('send');
