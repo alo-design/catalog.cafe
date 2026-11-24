@@ -90,12 +90,14 @@ b,strong{font-weight:400}
 .sec-t{flex:1;margin:0;min-width:0;font-size:var(--font-size-body);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sec-t a,.sec-t .lbl{display:inline-block;color:inherit;text-decoration:none}
 /* filtered bento: the count becomes a fraction (matches/all); hovering it opens the Filters popover */
-.b-n.frac{position:relative;z-index:2;margin:-2px -6px -2px 0;padding:2px 6px;border-radius:var(--radius-compact);cursor:pointer;pointer-events:auto}
-.b-n.frac.on{background:var(--surface-control);color:var(--text-primary)}
-@media (hover:hover){.b-n.frac:hover{background:var(--surface-control);color:var(--text-primary)}}
+.b-n.frac{position:relative;z-index:2;pointer-events:auto}
+/* the grey box sits behind the fraction only; the x appears outside it, to the right */
+.fr-n{margin:-2px -6px;padding:2px 6px;border-radius:var(--radius-compact)}
+.b-n.frac.on .fr-n{background:var(--surface-control);color:var(--text-primary)}
+@media (hover:hover){.fr-n:hover{background:var(--surface-control);color:var(--text-primary)}}
 /* while the bento sorts, the fraction flashes its hover state */
-.bento.busy .b-n.frac{animation:fracflash .6s ease-in-out infinite alternate}
-.b-n.frac.ping{animation:fracflash .3s ease-in-out 4 alternate}
+.bento.busy .fr-n{animation:fracflash .6s ease-in-out infinite alternate}
+.b-n.frac.ping .fr-n{animation:fracflash .3s ease-in-out 4 alternate}
 @keyframes fracflash{from{background:transparent;color:var(--text-secondary)}to{background:var(--surface-control);color:var(--text-primary)}}
 .fpop{position:fixed;z-index:25;width:300px;padding:12px var(--inset-control) var(--inset-control);background:var(--surface-raised);border-radius:var(--radius-option);box-shadow:var(--shadow-raised),0 0 0 1px var(--border-subtle);animation:fade .12s}
 .fpop h2{margin:0 0 var(--gap-controls);font-size:var(--font-size-body);font-weight:400;color:var(--text-primary)}
@@ -107,10 +109,11 @@ b,strong{font-weight:400}
 /* the fraction's x (clears this bento's filters) slides in from the right on hover with the Quick spring; leaving resets instantly */
 .b-n.frac{display:inline-flex;align-items:center}
 .fr-n{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
-.fr-x{display:inline-grid;place-items:center;width:0;height:14px;margin-left:0;padding:0;border:0;background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);overflow:hidden;cursor:pointer}
+.fr-x{display:inline-grid;place-items:center;width:14px;height:14px;margin-left:calc(var(--gap-tight) + 6px);padding:0;border:0;background:none;color:var(--text-secondary);opacity:0;transform:translateX(8px);pointer-events:none;cursor:pointer}
 .fr-x .ic{width:12px;height:12px;flex:none}
-.b-n.frac.on .fr-x{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none}
-@media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{width:14px;margin-left:var(--gap-tight);opacity:1;transform:none;transition:width .3s cubic-bezier(.3,1.45,.6,1),margin .3s cubic-bezier(.3,1.45,.6,1),transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}
+/* the x's space is kept, so the fraction never moves when it appears */
+.b-n.frac.on .fr-x{opacity:1;transform:none;pointer-events:auto}
+@media (hover:hover){.b-n.frac:hover .fr-x,.b-n.frac:focus-within .fr-x{opacity:1;transform:none;pointer-events:auto;transition:transform .3s cubic-bezier(.3,1.45,.6,1),opacity .15s ease-out}
   .fr-x:hover{color:var(--text-primary)}}
 .b-n,.fam-n{flex:none;font-size:var(--font-size-caption);color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .b-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-tight);aspect-ratio:1;align-content:start;transition:opacity .2s ease}
@@ -929,13 +932,12 @@ function openFpop(nEl){
   clearTimeout(fpopTimer);
   let el=document.getElementById('fpop');
   if(!el||fpopFor!==nEl){closeFpop();el=document.createElement('div');el.className='fpop';el.id='fpop';el.setAttribute('role','dialog');el.setAttribute('aria-label','Filters');document.body.appendChild(el);
-    el.addEventListener('mouseenter',()=>clearTimeout(fpopTimer));el.addEventListener('mouseleave',()=>{fpopTimer=setTimeout(closeFpop,150)})}
+}
   fpopFor=nEl;nEl.classList.add('on');
   el.innerHTML=`<h2>Filters</h2><div class="chips">${fs.map(f=>`<button class="fpill" data-unfilter="${f.k}:${esc(f.v)}" aria-label="Remove filter: ${esc(f.label)}">${esc(f.label)}${ico('x')}</button>`).join('')}</div>`;
   const r=nEl.getBoundingClientRect();el.style.left=Math.max(12,Math.min(r.right-el.offsetWidth+6,innerWidth-el.offsetWidth-12))+'px';el.style.top=(r.bottom+6)+'px';
 }
-main.addEventListener('mouseover',e=>{if(!matchMedia('(hover:hover)').matches)return;const n=e.target.closest('.b-n.frac');if(n)openFpop(n)});
-main.addEventListener('mouseout',e=>{const n=e.target.closest('.b-n.frac');if(n&&fpopFor===n&&!(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('#fpop')))fpopTimer=setTimeout(closeFpop,150)});
+// the popover opens on click (or Enter), never on hover
 main.addEventListener('keydown',e=>{const n=e.target.closest&&e.target.closest('.fr-n')&&e.target.closest('.b-n.frac');if(n&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():(openFpop(n),document.querySelector('#fpop .fpill')?.focus())}},true);
 document.addEventListener('click',e=>{
   const u=e.target.closest('[data-unfilter]');
@@ -943,7 +945,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#fpop'))return;
   const cx=e.target.closest('[data-clearfrac]');
   if(cx){e.preventDefault();e.stopPropagation();const b=BENTOS[Number(cx.closest('.bento').dataset.bi)];closeFpop();if(b){b.keys.forEach(k=>S.filters[k]=[]);save();drawAll(true,b.keys)}return}
-  const n=e.target.closest('.b-n.frac');if(n){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():openFpop(n);return}
+  const n=e.target.closest('.fr-n')&&e.target.closest('.b-n.frac');if(n){e.preventDefault();e.stopPropagation();fpopFor===n?closeFpop():openFpop(n);return}
   if(fpopFor)closeFpop();
 },true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fpopFor){const n=fpopFor;closeFpop();n.focus()}});
